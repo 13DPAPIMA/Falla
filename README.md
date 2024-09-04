@@ -1,7 +1,24 @@
 # Falla
 
-description...
+## Description
 
+Falla is an app that helps users choose clothes based on the current weather. Using weather data obtained from the API, the app suggests suitable clothing options for users to stay comfortable outdoors.
+
+## Features
+
+- Get real-time weather data via API.
+- Clothing recommendations based on temperature, precipitation, wind, and other weather conditions.
+- Customizable user preferences such as sensitivity to cold or heat.
+- Intuitive interface for easy use.
+
+## Authors
+```
+Fēliks Regzdiņš 
+Artjoms Pimanovs
+Laura Levica
+Agnese Tarvida
+
+```
 ## Project Structure
 ```
 Falla/
