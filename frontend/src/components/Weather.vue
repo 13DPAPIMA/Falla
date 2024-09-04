@@ -55,13 +55,6 @@ export default {
       return this.currentTime.toLocaleTimeString();
     },
   },
-  filters: {
-    capitalize(value) {
-      if (!value) return '';
-      value = value.toString();
-      return value.charAt(0).toUpperCase() + value.slice(1);
-    },
-  },
   mounted() {
     this.fetchWeather();
   },
@@ -69,8 +62,6 @@ export default {
     async fetchWeather() {
         try {
             const response = await axios.get('http://localhost:8000/api/weather');
-            
-            console.log('Weather data:', response.data);
 
             if (!response.data || !response.data.weather || !Array.isArray(response.data.weather) || response.data.weather.length === 0) {
                 throw new Error('Invalid weather data structure');
