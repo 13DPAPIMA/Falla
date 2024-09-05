@@ -4,6 +4,11 @@
       {{ errorMessage }}
     </div>
     
+    <div class="city-input">
+      <input v-model="city" type="text" placeholder="Enter city" />
+      <button @click="fetchWeather">Get Weather</button>
+    </div>
+    
     <div class="weather-container" v-if="weather">
       <h2 class="city-name">{{ weather.name }} Weather Status</h2>
       <hr class="divider">
@@ -12,22 +17,24 @@
           <div class="formatted-time">{{ formattedTime }}</div>
           <div class="formatted-date">{{ formattedDate }}</div>
           <hr class="divider">
-          <div class="weather-description">{{ weather.weather[0].description }}</div>
+          <div class="weather-description">{{ weather.weather[0]?.description || 'No description available' }}</div>
         </div>
+        <div class="temperature-info">Current temperature: {{ weather.main?.temp || 'N/A' }}°C</div>
         <div class="weather-forecast">
           <img
+            v-if="weather.weather[0]?.icon"
             :src="`https://openweathermap.org/img/w/${weather.weather[0].icon}.png`"
             class="weather-icon"
             alt="Weather Icon"
           />
           <div class="temperature-info">
-            <div>Max Temp: {{ weather.main.temp_max }}°C</div>
-            <div>Min Temp: {{ weather.main.temp_min }}°C</div>
+            <div>Max Temp: {{ weather.main?.temp_max || 'N/A' }}°C</div>
+            <div>Min Temp: {{ weather.main?.temp_min || 'N/A' }}°C</div>
           </div>
         </div>
         <div class="additional-info">
-          <div>Humidity: {{ weather.main.humidity }} %</div>
-          <div>Wind: {{ weather.wind.speed }} km/h</div>
+          <div>Humidity: {{ weather.main?.humidity || 'N/A' }} %</div>
+          <div>Wind: {{ weather.wind?.speed || 'N/A' }} km/h</div>
         </div>
       </div>
     
@@ -41,56 +48,109 @@
 
 <script>
 import api from '@/api.ts';
+import axios from 'axios';
 
 export default {
   data() {
     return {
       weather: null,
+      city: '', 
       currentTime: new Date(),
       errorMessage: null,
     };
   },
   computed: {
+    
     formattedDate() {
       return this.currentTime.toLocaleDateString();
     },
     formattedTime() {
       return this.currentTime.toLocaleTimeString();
     },
+    
   },
   mounted() {
-    this.fetchWeather();
-  },
-  methods: {
-    async fetchWeather() {
-      try {
-        const response = await api.get('/weather');
-        
-        if (!response.data || !response.data.weather || !Array.isArray(response.data.weather) || response.data.weather.length === 0) {
-          throw new Error('Invalid weather data structure');
-        }
-        
-        this.weather = response.data;
-        this.currentTime = new Date();
-      } catch (error) {
-        console.error('Error fetching weather data:', error);
-        
-        if (error.response) {
-          this.errorMessage = `Error ${error.response.status}: ${error.response.statusText}`;
-        } else if (error.request) {
-          this.errorMessage = 'No response received from server. Please check your connection.';
-        } else {
-          this.errorMessage = `Error: ${error.message}`;
-        }
-        
-        this.weather = null;
+  if (!this.city) {
+    this.city = 'Riga'; 
+  }
+  this.fetchWeather(); 
+},
+methods: {
+  async fetchWeather() {
+    const cityToFetch = this.city || 'Riga'; // Если city пустой, используем Riga
+
+    try {
+      const response = await axios.get(`/weather?city=${cityToFetch}`);
+      this.weather = response.data;
+      this.errorMessage = null;
+    } catch (error) {
+      console.error('Error fetching weather data:', error);
+
+      if (error.response) {
+        this.errorMessage = `Error ${error.response.status}: ${error.response.statusText}`;
+      } else if (error.request) {
+        this.errorMessage = 'No response received from server.';
+      } else {
+        this.errorMessage = `Error: ${error.message}`;
       }
-    },
+
+      this.weather = null;
+    }
   },
+}
+
 };
 </script>
 
 <style scoped>
+.weather-container {
+  font-family: Arial, sans-serif;
+  border: 1px solid #ccc;
+  padding: 20px;
+  margin-top: 20px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  text-align: center;
+}
+
+.city-input {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.city-input input {
+  padding: 8px;
+  font-size: 16px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.city-input button {
+  padding: 8px 12px;
+  margin-left: 10px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.city-input button:hover {
+  background-color: #0056b3;
+}
+
+.error-message {
+  color: red;
+  font-weight: bold;
+}
+
+.loading {
+  font-size: 18px;
+  color: #007bff;
+}
+
 .weather-wrapper {
   max-width: 600px;
   margin: 0 auto;
