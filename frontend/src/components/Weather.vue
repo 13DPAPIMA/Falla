@@ -37,7 +37,7 @@
 </template>
 
 <script>
-import api from '@/api.js';
+import api from '@/api.ts';
 
 export default {
   data() {
