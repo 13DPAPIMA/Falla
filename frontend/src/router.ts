@@ -3,7 +3,7 @@ import HelloWorld from '@/components/HelloWorld.vue';
 import Weather from '@/components/Weather.vue';
 import Register from '@/components/auth/Register.vue';
 import Login from '@/components/auth/Login.vue';
-
+import Profile from '@/components/Profile.vue';
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -20,6 +20,11 @@ const routes: Array<RouteRecordRaw> = [
         path: '/login',
         name: 'login',
         component: Login
+    },
+    {
+        path: '/profile',
+        name: 'profile',
+        component: Profile
     },
     {
         path: '/weather',
