@@ -17,7 +17,7 @@ const formSchema = toTypedSchema(z.object({
   password: z.string(),
 }));
 
-const { handleSubmit, errors } = useForm({
+const { handleSubmit } = useForm({
   validationSchema: formSchema,
 });
 
@@ -37,7 +37,7 @@ const onSubmit = handleSubmit(async (formValues) => {
 </script>
 
 <template>
-  <div class="w-full lg:min-h-[600px] xl:min-h-[800px]">
+  <div class="w-full max-h-screen lg:max-h-[600px] xl:max-h-[800px] overflow-auto">
     <div class="flex items-center justify-center py-12">
       <div class="mx-auto grid w-[350px] gap-6">
         <div class="grid gap-2 text-center">
