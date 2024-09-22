@@ -77,26 +77,27 @@ export default {
 },
 methods: {
   async fetchWeather() {
-    const cityToFetch = this.city || 'Riga'; // Если city пустой, используем Riga
-
-    try {
-      const response = await axios.get(`/weather?city=${cityToFetch}`);
-      this.weather = response.data;
-      this.errorMessage = null;
-    } catch (error) {
-      console.error('Error fetching weather data:', error);
-
-      if (error.response) {
-        this.errorMessage = `Error ${error.response.status}: ${error.response.statusText}`;
-      } else if (error.request) {
-        this.errorMessage = 'No response received from server.';
-      } else {
-        this.errorMessage = `Error: ${error.message}`;
-      }
-
-      this.weather = null;
+  const cityToFetch = this.city || 'Riga';
+  
+  try {
+    const response = await axios.get(`/weather?city=${encodeURIComponent(cityToFetch)}`);
+    this.weather = response.data;
+    this.errorMessage = null;
+  } catch (error) {
+    console.error('Error fetching weather data:', error);
+    
+    if (error.response) {
+      this.errorMessage = `Error ${error.response.status}: ${error.response.statusText}`;
+    } else if (error.request) {
+      this.errorMessage = 'No response received from server.';
+    } else {
+      this.errorMessage = `Error: ${error.message}`;
     }
-  },
+
+    this.weather = null;
+  }
+}
+
 }
 
 };

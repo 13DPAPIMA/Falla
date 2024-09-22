@@ -11,7 +11,8 @@ class WeatherController extends Controller
         $city = $request->input('city', 'Riga');
         $apiKey = env('OPENWEATHERMAP_API_KEY');
 
-        $googleApiUrl = "https://api.openweathermap.org/data/2.5/weather?q={$city}&lang=en&units=metric&APPID={$apiKey}";
+        $encodedCity = urlencode($city);
+        $googleApiUrl = "https://api.openweathermap.org/data/2.5/weather?q={$encodedCity}&lang=en&units=metric&APPID={$apiKey}";
 
         $ch = curl_init();
 
