@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('clothing', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('style_id')->constrained('styles');
+            $table->foreignId('style_id')->references('id')->on('styles');
             $table->foreignId('photo_id')->constrained('clothing_photos');
             $table->foreignId('type_id')->constrained('clothing_types');
             $table->foreignId('temperature_range_id')->constrained('temperature_ranges');
