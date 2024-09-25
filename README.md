@@ -90,7 +90,7 @@ cd Falla
     ```bash
     php artisan serve
     ```
-8. Instructions for obtaining an API key from OpenWeatherMap
+# Instructions for obtaining an API key from OpenWeatherMap
 
 ## Step 1: Register on the OpenWeatherMap website
 
@@ -104,7 +104,7 @@ Fill out the registration form with your email address, username, and password.
 
 Verify your account by clicking the link sent to the email address you provided.
 
-##Step 2: Obtaining an API Key
+## Step 2: Obtaining an API Key
 
 Once you are logged into your account on the OpenWeatherMap website, go to the API keys section.
 
@@ -114,7 +114,7 @@ Enter a name for your API key and click Generate.
 
 Copy the generated API key.
 
-##Step 3: Paste the key into the .env file
+## Step 3: Paste the key into the .env file
 
 Open the project folder.
 
