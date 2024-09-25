@@ -12,13 +12,13 @@ class WeatherController extends Controller
         $apiKey = env('OPENWEATHERMAP_API_KEY');
 
         $encodedCity = urlencode($city);
-        $googleApiUrl = "https://api.openweathermap.org/data/2.5/weather?q={$encodedCity}&lang=en&units=metric&APPID={$apiKey}";
+        $fiveDaysUrl =  "https://api.openweathermap.org/data/2.5/forecast?q={$encodedCity}&lang=en&units=metric&appid={$apiKey}";
 
         $ch = curl_init();
 
         curl_setopt($ch, CURLOPT_HEADER, 0);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_URL, $googleApiUrl);
+        curl_setopt($ch, CURLOPT_URL, $fiveDaysUrl);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
         curl_setopt($ch, CURLOPT_VERBOSE, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -32,7 +32,7 @@ class WeatherController extends Controller
 
         $data = json_decode($response, true);
 
-        if (isset($data['cod']) && $data['cod'] !== 200) {
+        if (isset($data['cod']) && $data['cod'] !== '200') {
             return response()->json(['error' => $data['message']], $data['cod']);
         }
 
