@@ -106,7 +106,7 @@ Verify your account by clicking the link sent to the email address you provided.
 
 ## Step 2: Obtaining an API Key
 
-Once you are logged into your account on the OpenWeatherMap website, go to the API keys section.
+Once you are logged into your account on the OpenWeatherMap website, go to the my API keys section.
 
 Click the Create button if the key has not been created yet.
 
