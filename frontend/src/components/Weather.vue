@@ -1,7 +1,5 @@
 <template>
   <div class="weather-wrapper">
-    
-
     <div class="city-input">
       <input v-model="city" type="text" placeholder="Enter city" />
       <button @click="fetchWeather">Get Weather</button>
@@ -11,99 +9,107 @@
       {{ errorMessage }}
     </div>
     
-    <div class="weather-container" v-if="weather">
-      <h2 class="city-name">{{ weather.name }} Weather Status</h2>
+    <div v-if="todayForecast && todayForecast.length" class="weather-container">
+      <h2 class="city-name">{{ weather.city.name }} Today's Weather</h2>
       <hr class="divider">
-      <div class="weather-details">
+
+      <div v-for="(forecast, index) in todayForecast" :key="index" class="forecast-item">
         <div class="time-info">
-          <div class="formatted-time">{{ formattedTime }}</div>
-          <div class="formatted-date">{{ formattedDate }}</div>
-          <hr class="divider">
-          <div class="weather-description">{{ weather.weather[0]?.description || 'No description available' }}</div>
+          <div class="formatted-time">{{ formatTime(forecast.dt_txt) }}</div>
+          <div class="weather-description">{{ forecast.weather[0].description }}</div>
         </div>
-        <div class="temperature-info">Current temperature: {{ weather.main?.temp || 'N/A' }}°C</div>
-        <div class="weather-forecast">
-          <img
-            v-if="weather.weather[0]?.icon"
-            :src="`https://openweathermap.org/img/w/${weather.weather[0].icon}.png`"
-            class="weather-icon"
-            alt="Weather Icon"
-          />
-          <div class="temperature-info">
-            <div>Max Temp: {{ weather.main?.temp_max || 'N/A' }}°C</div>
-            <div>Min Temp: {{ weather.main?.temp_min || 'N/A' }}°C</div>
-          </div>
+
+        <div class="temperature-info">
+          <div>Temp: {{ forecast.main.temp }}°C (Feels like {{ forecast.main.feels_like }}°C)</div>
+          <div>Max: {{ forecast.main.temp_max }}°C | Min: {{ forecast.main.temp_min }}°C</div>
         </div>
+
         <div class="additional-info">
-          <div>Humidity: {{ weather.main?.humidity || 'N/A' }} %</div>
-          <div>Wind: {{ weather.wind?.speed || 'N/A' }} km/h</div>
+          <div>Humidity: {{ forecast.main.humidity }}%</div>
+          <div>Wind: {{ forecast.wind.speed }} km/h, gusts up to {{ forecast.wind.gust }} km/h</div>
+          <div>Cloudiness: {{ forecast.clouds.all }}%</div>
+          <div>Rain: {{ forecast.rain?.['3h'] || 0 }} mm</div>
         </div>
+
+        <img
+          v-if="forecast.weather[0]?.icon"
+          :src="`https://openweathermap.org/img/w/${forecast.weather[0].icon}.png`"
+          class="weather-icon"
+          alt="Weather Icon"
+        />
+        <hr class="divider">
       </div>
-      
     </div>
-    
+
     <div v-else>
-      <div class="loading-message">Loading weather data...</div>
+      <div class="loading-message">No weather data for today.</div>
     </div>
   </div>
 </template>
 
+
 <script>
-import api from '@/api.ts';
 import axios from 'axios';
 
 export default {
   data() {
     return {
       weather: null,
-      city: '', 
-      currentTime: new Date(),
+      city: '',
       errorMessage: null,
+      todayForecast: [], // массив для хранения прогноза на сегодня
     };
   },
-  computed: {
-    
-    formattedDate() {
-      return this.currentTime.toLocaleDateString();
+  methods: {
+    async fetchWeather() {
+      const cityToFetch = this.city || 'Riga';
+
+      try {
+        const response = await axios.get(`/weather?city=${encodeURIComponent(cityToFetch)}`);
+        console.log('Weather data:', response.data);  // Логирование данных
+        this.weather = response.data;
+        this.errorMessage = null;
+
+        // После получения данных отфильтруем прогноз на сегодня
+        this.filterTodayForecast();
+      } catch (error) {
+        console.error('Error fetching weather data:', error);
+
+        if (error.response) {
+          this.errorMessage = `Error ${error.response.status}: ${error.response.statusText}`;
+        } else if (error.request) {
+          this.errorMessage = 'No response received from server.';
+        } else {
+          this.errorMessage = `Error: ${error.message}`;
+        }
+
+        this.weather = null;
+      }
     },
-    formattedTime() {
-      return this.currentTime.toLocaleTimeString();
+    filterTodayForecast() {
+      if (!this.weather || !this.weather.list) return;
+
+      const today = new Date().toISOString().split('T')[0]; // Получаем текущую дату в формате YYYY-MM-DD
+
+      // Фильтруем только прогнозы на сегодняшний день
+      this.todayForecast = this.weather.list.filter(forecast => {
+        const forecastDate = forecast.dt_txt.split(' ')[0]; // Дата прогноза
+        return forecastDate === today;
+      });
     },
-    
+    formatTime(dateTime) {
+      const options = { hour: '2-digit', minute: '2-digit' };
+      return new Date(dateTime).toLocaleTimeString(undefined, options);
+    },
   },
   mounted() {
-  if (!this.city) {
-    this.city = 'Riga'; 
-  }
-  this.fetchWeather(); 
-},
-methods: {
-  async fetchWeather() {
-  const cityToFetch = this.city || 'Riga';
-  
-  try {
-    const response = await axios.get(`/weather?city=${encodeURIComponent(cityToFetch)}`);
-    this.weather = response.data;
-    this.errorMessage = null;
-  } catch (error) {
-    console.error('Error fetching weather data:', error);
-    
-    if (error.response) {
-      this.errorMessage = `Error ${error.response.status}: ${error.response.statusText}`;
-    } else if (error.request) {
-      this.errorMessage = 'No response received from server.';
-    } else {
-      this.errorMessage = `Error: ${error.message}`;
-    }
-
-    this.weather = null;
-  }
-}
-
-}
-
+    this.city = 'Riga';
+    this.fetchWeather();
+  },
 };
 </script>
+
+
 
 <style scoped>
 .weather-container {
