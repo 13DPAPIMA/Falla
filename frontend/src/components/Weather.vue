@@ -49,7 +49,7 @@
 
 
 <script>
-import axios from 'axios';
+import api from '@/api.ts';
 
 export default {
   data() {
@@ -65,7 +65,7 @@ export default {
       const cityToFetch = this.city || 'Riga';
 
       try {
-        const response = await axios.get(`/weather?city=${encodeURIComponent(cityToFetch)}`);
+        const response = await api.get(`api/weather?city=${encodeURIComponent(cityToFetch)}`);
         console.log('Weather data:', response.data);  // Логирование данных
         this.weather = response.data;
         this.errorMessage = null;
