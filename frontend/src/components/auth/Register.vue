@@ -28,7 +28,7 @@ const { handleSubmit, error } = useForm({
 const onSubmit = handleSubmit(async (formValues) => {
   console.log('Submitted values:', formValues);
   try {
-    const response = await api.post('/register', formValues);
+    const response = await api.post('/api/register', formValues);
     localStorage.setItem('token', response.data.token);
     router.push('/');
   } catch (error) {
