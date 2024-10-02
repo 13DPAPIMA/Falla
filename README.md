@@ -16,8 +16,8 @@ Falla is an app that helps users choose clothes based on the current weather. Us
 - [Fēliks Regzdiņš](https://github.com/21DP3FRegz)
 - [Artjoms Pimanovs](https://github.com/13DPAPIMA)
 - Laura Levica
-Agnese Tarvida
-Kristiāns Ozoliņš
+- Agnese Tarvida
+- Kristiāns Ozoliņš
 
 ## Project Structure
 ```
