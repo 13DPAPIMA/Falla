@@ -54,10 +54,16 @@ class AuthController extends Controller
         $user = $request->user();
 
         $validatedData = $request->validate([
-            'name' => 'sometimes|string|max:255'
+            'email' => 'sometimes|email|unique:users,email,' . $user->id,
+            'password' => 'sometimes|string|min:8|confirmed',
+            'gender' => 'sometimes|in:Male,Female',
         ]);
 
-        $dataToUpdate = array_intersect_key($validatedData, array_flip(['name', 'bio']));
+        $dataToUpdate = array_intersect_key($validatedData, array_flip(['email', 'gender']));
+
+        if (isset($validatedData['password'])) {
+            $dataToUpdate['password'] = bcrypt($validatedData['password']);
+        }
 
         $user->update($dataToUpdate);
 
