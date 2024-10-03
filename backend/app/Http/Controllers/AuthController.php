@@ -56,9 +56,10 @@ class AuthController extends Controller
         $validatedData = $request->validate([
             'email' => 'sometimes|email|unique:users,email,' . $user->id,
             'password' => 'sometimes|string|min:8|confirmed',
+            'gender' => 'sometimes|in:Male,Female',
         ]);
 
-        $dataToUpdate = array_intersect_key($validatedData, array_flip(['email']));
+        $dataToUpdate = array_intersect_key($validatedData, array_flip(['email', 'gender']));
 
         if (isset($validatedData['password'])) {
             $dataToUpdate['password'] = bcrypt($validatedData['password']);
