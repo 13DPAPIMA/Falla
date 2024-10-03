@@ -39,12 +39,26 @@
         />
         <hr class="divider">
       </div>
+
+      <form @submit.prevent="uploadImage" enctype="multipart/form-data">
+        <input type="file" @change="handleFileUpload" />
+        <button type="submit">Upload Image</button>
+      </form>
+      
+      <div v-if="uploadedImageUrl">
+        <h3>Uploaded Image:</h3>
+        <img :src="uploadedImageUrl" alt="Uploaded Image" />
+      </div>
+
     </div>
 
     <div v-else>
       <div class="loading-message">No weather data for today.</div>
     </div>
   </div>
+
+
+  
 </template>
 
 
@@ -66,7 +80,6 @@ export default {
 
       try {
         const response = await axios.get(`/weather?city=${encodeURIComponent(cityToFetch)}`);
-        console.log('Weather data:', response.data);  // Логирование данных
         this.weather = response.data;
         this.errorMessage = null;
 
