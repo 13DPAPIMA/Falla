@@ -61,6 +61,7 @@ onMounted(async () => {
   <div v-if="userData">
     <h1>User Profile</h1>
     <p><strong>Email:</strong> {{ userData.email }}</p>
+    <p><strong>Gender:</strong> {{ userData.gender }}</p>
 
     <Button @click="logout">Logout</Button>
   </div>
