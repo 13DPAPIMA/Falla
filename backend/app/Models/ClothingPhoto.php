@@ -11,6 +11,8 @@ class ClothingPhoto extends Model
 
     protected $fillable = [
         'photo_url',
+        'cloudinary_public_id',
+
     ];
 
     public function clothing()

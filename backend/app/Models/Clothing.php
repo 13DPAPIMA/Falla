@@ -27,7 +27,7 @@ class Clothing extends Model
 
     public function photo()
     {
-        return $this->belongsTo(ClothingPhoto::class);
+        return $this->belongsTo(ClothingPhoto::class, 'photo_id');
     }
 
     public function type()
