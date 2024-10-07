@@ -39,14 +39,44 @@
         />
         <hr class="divider">
       </div>
+
+      <div v-if="cloudinaryImageUrl" class="cloudinary-image">
+        <h3>Cloudinary Image:</h3>
+        <img :src="cloudinaryImageUrl" alt="Cloudinary Image" />
+      </div>
+
     </div>
 
+    
     <div v-else>
       <div class="loading-message">No weather data for today.</div>
     </div>
   </div>
-</template>
 
+  <div class="clothing-suggestions">
+    <h1>Clothing Suggestions</h1>
+    <div v-for="item in clothing" :key="item.id" class="clothing-item">
+      <h3>{{ item.type }}</h3>
+      <img :src="item.photo_url" alt="Clothing Photo" />
+      <p>Style: {{ item.style }}</p>
+      <p>Color: {{ item.color }}</p>
+    </div>
+  </div>
+
+  <div class="upload-photo">
+    <form @submit.prevent="uploadPhoto" enctype="multipart/form-data">
+      <label for="photo">Choose a photo:</label>
+      <input type="file" id="photo" @change="handleFileUpload" />
+      <button type="submit">Upload</button>
+    </form>
+
+    <div v-if="uploadedPhotoUrl">
+      <h3>Uploaded Photo:</h3>
+      <img :src="uploadedPhotoUrl" alt="Uploaded Photo" />
+    </div>
+  </div>
+
+</template>
 
 <script>
 import api from '@/api.ts';
@@ -55,9 +85,10 @@ export default {
   data() {
     return {
       weather: null,
-      city: '',
+      city: 'Riga', // Начальный город
       errorMessage: null,
-      todayForecast: [], // массив для хранения прогноза на сегодня
+      todayForecast: [],
+      clothing: [], // Список одежды
     };
   },
   methods: {
@@ -65,12 +96,17 @@ export default {
       const cityToFetch = this.city || 'Riga';
 
       try {
-        const response = await api.get(`api/weather?city=${encodeURIComponent(cityToFetch)}`);
-        console.log('Weather data:', response.data);  // Логирование данных
+
+        // Запрос погоды по городу
+        const response = await axios.get(`/weather?city=${encodeURIComponent(cityToFetch)}`);
+
+        
         this.weather = response.data;
         this.errorMessage = null;
 
-        // После получения данных отфильтруем прогноз на сегодня
+        // Получение предложений одежды на основе погоды
+        this.fetchClothingSuggestions();
+
         this.filterTodayForecast();
       } catch (error) {
         console.error('Error fetching weather data:', error);
@@ -86,14 +122,28 @@ export default {
         this.weather = null;
       }
     },
+    async fetchClothingSuggestions() {
+  try {
+    // Логируем данные о погоде для проверки структуры перед отправкой
+      console.log('Weather data being sent to server:', this.weather);
+
+    // Отправляем данные о погоде на сервер
+      const response = await axios.post('/clothing-suggestions', {
+        weather: this.weather // Отправляем объект weather, содержащий ключ list
+      });
+
+      this.clothing = response.data; // Получаем предложения одежды
+    } catch (error) {
+      console.error('Error fetching clothing suggestions:', error);
+    }
+  },
     filterTodayForecast() {
       if (!this.weather || !this.weather.list) return;
 
-      const today = new Date().toISOString().split('T')[0]; // Получаем текущую дату в формате YYYY-MM-DD
-
+      const today = new Date().toISOString().split('T')[0];
       // Фильтруем только прогнозы на сегодняшний день
       this.todayForecast = this.weather.list.filter(forecast => {
-        const forecastDate = forecast.dt_txt.split(' ')[0]; // Дата прогноза
+        const forecastDate = forecast.dt_txt.split(' ')[0];
         return forecastDate === today;
       });
     },
@@ -103,15 +153,51 @@ export default {
     },
   },
   mounted() {
-    this.city = 'Riga';
-    this.fetchWeather();
+    this.fetchWeather(); // Получаем погоду сразу после загрузки компонента
   },
 };
 </script>
 
-
-
 <style scoped>
+.upload-photo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+input[type="file"] {
+  margin-bottom: 10px;
+}
+
+button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+img {
+  margin-top: 20px;
+  max-width: 300px;
+  border: 1px solid #ccc;
+}
+
+.clothing-item {
+  border: 1px solid #ccc;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.clothing-item img {
+  width: 150px;
+  height: auto;
+}
+
 .weather-container {
   font-family: Arial, sans-serif;
   border: 1px solid #ccc;

@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WeatherController;
+use App\Http\Controllers\ClothingSuggestionsController;
+use App\Http\Controllers\PhotoController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -16,3 +18,7 @@ Route::middleware('auth:sanctum')->post('logout', [AuthController::class, 'logou
 Route::middleware('auth:sanctum')->put('user', [AuthController::class, 'update']);
 
 Route::get('/weather', [WeatherController::class, 'getWeather']);
+
+Route::post('/clothing-suggestions', [ClothingSuggestionsController::class, 'getClothingSuggestions']);
+
+Route::post('/upload-photo', [App\Http\Controllers\PhotoController::class, 'uploadPhoto']);

@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('clothing_photos', function (Blueprint $table) {
             $table->id();
-            $table->string('photo_url', 255);
+            $table->string('cloudinary_public_id');
+            $table->string('photo_url')->default("photo/url/photo.jpg");
             $table->timestamps();
         });
     }
