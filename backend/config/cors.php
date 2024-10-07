@@ -7,12 +7,15 @@ return [
     | Cross-Origin Resource Sharing (CORS) Configuration
     |--------------------------------------------------------------------------
     |
-    | Здесь вы можете настроить CORS для вашего приложения. Эти настройки
-    | определяют, какие запросы из каких источников разрешены.
+    | Here you may configure your settings for cross-origin resource sharing
+    | or "CORS". This determines what cross-origin operations may execute
+    | in web browsers. You are free to adjust these settings as needed.
+    |
+    | To learn more: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
     |
     */
 
-    'paths' => ['api/*'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
 
@@ -27,4 +30,6 @@ return [
     'max_age' => 0,
 
     'supports_credentials' => false,
+=======
+
 ];

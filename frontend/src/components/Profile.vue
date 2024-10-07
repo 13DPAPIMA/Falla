@@ -17,7 +17,7 @@ const fetchUserData = async () => {
       return; // Exit function early if token is not available
     }
 
-    const response = await api.get('/user', {
+    const response = await api.get('/api/user', {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -36,7 +36,7 @@ const fetchUserData = async () => {
 const logout = async () => {
   const token = localStorage.getItem('token');
 
-  await api.post('/logout', {}, {
+  await api.post('/api/logout', {}, {
     headers: {
       Authorization: `Bearer ${token}`
     }
@@ -61,6 +61,7 @@ onMounted(async () => {
   <div v-if="userData">
     <h1>User Profile</h1>
     <p><strong>Email:</strong> {{ userData.email }}</p>
+    <p><strong>Gender:</strong> {{ userData.gender }}</p>
 
     <Button @click="logout">Logout</Button>
   </div>

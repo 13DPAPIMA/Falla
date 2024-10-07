@@ -21,9 +21,14 @@ const { handleSubmit } = useForm({
   validationSchema: formSchema,
 });
 
+const getToken = async () => {
+  await api.get('/sanctum/csrf-cookie')
+}
+
 const onSubmit = handleSubmit(async (formValues) => {
   try {
-    const response = await api.post('/login', formValues);
+    await getToken();
+    const response = await api.post('/api/login', formValues);
     localStorage.setItem('token', response.data.token);
     router.push('/');
   } catch (error) {

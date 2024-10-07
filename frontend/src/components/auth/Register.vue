@@ -10,12 +10,26 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
 
+// Import Select Components
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+
 const { toast } = useToast()
 
 const formSchema = toTypedSchema(z.object({
   email: z.string().email(),
   password: z.string().min(6),
   password_confirmation: z.string().min(6),
+  gender: z.enum(['Male', 'Female'], {
+    required_error: 'Please select your gender',
+  }),
 }).refine(data => data.password === data.password_confirmation, {
   message: "Passwords don't match",
   path: ["password_confirmation"],
@@ -28,7 +42,7 @@ const { handleSubmit, error } = useForm({
 const onSubmit = handleSubmit(async (formValues) => {
   console.log('Submitted values:', formValues);
   try {
-    const response = await api.post('/register', formValues);
+    const response = await api.post('/api/register', formValues);
     localStorage.setItem('token', response.data.token);
     router.push('/');
   } catch (error) {
@@ -90,6 +104,35 @@ const onSubmit = handleSubmit(async (formValues) => {
               </FormControl>
               <FormDescription>
                 Please re-enter your password.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          </FormField>
+
+          <!-- Gender Select Field -->
+          <FormField v-slot="{ componentField }" name="gender">
+            <FormItem>
+              <FormLabel>Gender</FormLabel>
+              <FormControl>
+                <Select v-bind="componentField">
+                  <SelectTrigger class="w-full">
+                    <SelectValue placeholder="Select your gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Gender</SelectLabel>
+                      <SelectItem value="Male">
+                        Male
+                      </SelectItem>
+                      <SelectItem value="Female">
+                        Female
+                      </SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormDescription>
+                Please select your gender.
               </FormDescription>
               <FormMessage />
             </FormItem>
