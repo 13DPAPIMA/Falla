@@ -1,8 +1,8 @@
 <template>
   <div class="weather-wrapper">
     <div class="city-input">
-      <input v-model="city" type="text" placeholder="Enter city" />
-      <button @click="fetchWeather">Get Weather</button>
+      <Input v-model="city" type="text" placeholder="Enter city" />
+      <Button class="ml-6" @click="fetchWeather">Get Weather</Button>
     </div>
 
     <div v-if="errorMessage" class="error-message">
@@ -53,6 +53,8 @@
 import { ref, onMounted, computed } from 'vue'
 import api from '@/api.ts'
 import { Separator } from '@/components/ui/separator'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import ClothingSuggestions from './ClothingSuggestions.vue'
 
 interface WeatherData {
@@ -133,22 +135,6 @@ onMounted(() => {
 
 <style scoped>
 
-input[type="file"] {
-  margin-bottom: 10px;
-}
-
-button {
-  background-color: #007bff;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #0056b3;
-}
-
 img {
   margin-top: 20px;
   max-width: 300px;
@@ -167,7 +153,6 @@ img {
 }
 
 .weather-container {
-  font-family: Arial, sans-serif;
   border: 1px solid #ccc;
   padding: 20px;
   margin-top: 20px;
@@ -180,28 +165,6 @@ img {
   display: flex;
   justify-content: center;
   margin-bottom: 20px;
-}
-
-.city-input input {
-  padding: 8px;
-  font-size: 16px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-}
-
-.city-input button {
-  padding: 8px 12px;
-  margin-left: 10px;
-  font-size: 16px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.city-input button:hover {
-  background-color: #0056b3;
 }
 
 .error-message {
@@ -218,7 +181,6 @@ img {
   max-width: 600px;
   margin: 0 auto;
   padding: 20px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .error-message {
