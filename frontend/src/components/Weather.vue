@@ -11,7 +11,8 @@
 
     <div v-if="todayForecast && todayForecast.length" class="weather-container">
       <h2 class="city-name">{{ weather.city.name }} Today's Weather</h2>
-      <hr class="divider">
+
+      <Separator />
 
       <div v-for="(forecast, index) in todayForecast" :key="index" class="forecast-item">
         <!-- Информация о погоде -->
@@ -49,58 +50,85 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import axios from 'axios';
-import ClothingSuggestions from './ClothingSuggestions.vue';
-import { Separator } from '@/components/ui/separator';
+import { ref, onMounted, computed } from 'vue'
+import api from '@/api.ts'
+import { Separator } from '@/components/ui/separator'
+import ClothingSuggestions from './ClothingSuggestions.vue'
 
-const weather = ref(null);
-const city = ref('Riga');
-const errorMessage = ref<string | null>(null);
-const todayForecast = ref<any[]>([]);
+interface WeatherData {
+  city: {
+    name: string
+    country: string
+  }
+  list: Array<{
+    dt_txt: string
+    main: {
+      temp: number
+      feels_like: number
+      humidity: number
+    }
+    weather: Array<{
+      description: string
+      icon: string
+    }>
+    wind: {
+      speed: number
+    }
+  }>
+}
+
+const weather = ref<WeatherData | null>(null)
+const city = ref('Riga')
+const errorMessage = ref<string | null>(null)
+const isLoading = ref(false)
+
+const todayForecast = computed(() => {
+  if (!weather.value || !weather.value.list) return []
+
+  const today = new Date().toISOString().split('T')[0]
+  return weather.value.list.filter((forecast) => {
+    const forecastDate = forecast.dt_txt.split(' ')[0]
+    return forecastDate === today
+  })
+})
 
 const fetchWeather = async () => {
-  const cityToFetch = city.value || 'Riga';
+  const cityToFetch = city.value || 'Riga'
+  isLoading.value = true
+  errorMessage.value = null
 
   try {
-    const response = await axios.get(`/api/weather?city=${encodeURIComponent(cityToFetch)}`);
-    weather.value = response.data;
-    errorMessage.value = null;
-
-    filterTodayForecast();
+    const response = await api.get<WeatherData>(`/api/weather?city=${encodeURIComponent(cityToFetch)}`)
+    weather.value = response.data
   } catch (error: any) {
-    console.error('Error fetching weather data:', error);
+    console.error('Error fetching weather data:', error)
 
-    if (error.response) {
-      errorMessage.value = `Error ${error.response.status}: ${error.response.statusText}`;
-    } else if (error.request) {
-      errorMessage.value = 'No response received from server.';
+    if (api.isAxiosError(error)) {
+      if (error.response) {
+        errorMessage.value = `Error ${error.response.status}: ${error.response.statusText}`
+      } else if (error.request) {
+        errorMessage.value = 'No response received from server.'
+      } else {
+        errorMessage.value = `Error: ${error.message}`
+      }
     } else {
-      errorMessage.value = `Error: ${error.message}`;
+      errorMessage.value = 'An unexpected error occurred.'
     }
 
-    weather.value = null;
+    weather.value = null
+  } finally {
+    isLoading.value = false
   }
-};
-
-const filterTodayForecast = () => {
-  if (!weather.value || !weather.value.list) return;
-
-  const today = new Date().toISOString().split('T')[0];
-  todayForecast.value = weather.value.list.filter((forecast: any) => {
-    const forecastDate = forecast.dt_txt.split(' ')[0];
-    return forecastDate === today;
-  });
-};
+}
 
 const formatTime = (dateTime: string) => {
-  const options: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' };
-  return new Date(dateTime).toLocaleTimeString(undefined, options);
-};
+  const options: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' }
+  return new Date(dateTime).toLocaleTimeString(undefined, options)
+}
 
 onMounted(() => {
-  fetchWeather();
-});
+  fetchWeather()
+})
 </script>
 
 <style scoped>
@@ -262,7 +290,4 @@ img {
   color: #666;
 }
 
-.divider {
-  margin: 20px 0;
-}
 </style>
