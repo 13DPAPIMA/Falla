@@ -79,7 +79,7 @@
 </template>
 
 <script>
-import api from '@/api.ts';
+import axios from 'axios';
 
 export default {
   data() {
@@ -98,7 +98,7 @@ export default {
       try {
 
         // Запрос погоды по городу
-        const response = await axios.get(`/weather?city=${encodeURIComponent(cityToFetch)}`);
+        const response = await axios.get(`/api/weather?city=${encodeURIComponent(cityToFetch)}`);
 
         
         this.weather = response.data;
@@ -128,7 +128,7 @@ export default {
       console.log('Weather data being sent to server:', this.weather);
 
     // Отправляем данные о погоде на сервер
-      const response = await axios.post('/clothing-suggestions', {
+      const response = await axios.post('api/clothing-suggestions', {
         weather: this.weather // Отправляем объект weather, содержащий ключ list
       });
 
