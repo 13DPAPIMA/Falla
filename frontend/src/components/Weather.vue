@@ -35,7 +35,6 @@
             class="weather-icon"
             alt="Weather Icon"
         />
-        <hr class="divider">
       </div>
     </div>
 
@@ -44,6 +43,7 @@
     </div>
   </div>
 
+  <Separator />
 
   <ClothingSuggestions v-if="weather" :weather="weather" />
 </template>
@@ -52,6 +52,7 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import ClothingSuggestions from './ClothingSuggestions.vue';
+import { Separator } from '@/components/ui/separator';
 
 const weather = ref(null);
 const city = ref('Riga');
