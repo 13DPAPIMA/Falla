@@ -9,8 +9,7 @@ class ClothingSuggestionsController extends Controller
 {
     public function getClothingSuggestions(Request $request)
     {
-        
-        // **Step 1: Validate the Request Data**
+        // **Step 1: Validate input data**
         $validatedData = $request->validate([
             'weather.list' => 'required|array|min:1',
             'weather.list.*.main.temp' => 'required|numeric',
@@ -18,39 +17,49 @@ class ClothingSuggestionsController extends Controller
             'weather.list.*.dt_txt' => 'required|string',
             'gender' => 'nullable|string|in:male,female,neutral'
         ]);
-        
-        // **Step 2: Retrieve Weather Data and Gender from Validated Data**
+
+        // **Step 2: Get weather and gender data**
         $gender = $validatedData['gender'] ?? 'neutral';
         $weather = $validatedData['weather'];
 
-        
-        // **Step 3: Get Today's Forecasts**
+        // **Step 3: Get today's forecasts**
         $forecasts = $this->getTodayForecasts($weather['list']);
 
         if (empty($forecasts)) {
             return response()->json(['error' => 'No forecast data available for today.'], 400);
         }
 
-        // **Step 4: Analyze Weather Conditions**
+        // **Step 4: Analyze weather conditions**
         $temperatureRangeId = $this->getOverallTemperatureRangeId($forecasts);
+        $temperatureRangeText = $this->getTemperatureRangeText($temperatureRangeId);
         $weatherConditions = $this->getOverallWeatherConditions($forecasts);
 
-        // **Step 5: Build the Clothing Query**
-        $clothingQuery = Clothing::with('photo')
+        // **Step 5: Build the clothing query**
+        $clothingQuery = Clothing::with(['photo', 'type', 'style', 'material']) // Eager load relationships
             ->where('temperature_range_id', $temperatureRangeId)
             ->where('gender', $gender);
 
-        // **Step 6: Modify the Query Based on Weather Conditions**
+        // **Step 6: Modify the query based on weather conditions**
         $clothingQuery = $this->modifyQueryBasedOnWeather($clothingQuery, $weatherConditions, $forecasts);
 
-        // **Step 7: Get Clothing Suggestions**
-        $clothing = $clothingQuery->get();
+        // **Step 7: Get clothing suggestions**
+        $clothingItems = $clothingQuery->get();
 
-        if ($clothing->isEmpty()) {
-            return response()->json(['message' => 'No clothing suggestions available for the current conditions.'], 200);
+        // **Step 8: Prepare the response data**
+        $clothingSuggestionsText = $this->generateClothingSuggestionsText($clothingItems);
+
+        $responseData = [
+            'temperature_range_id' => $temperatureRangeId,
+            'temperature_range_text' => $temperatureRangeText,
+            'weather_conditions' => $weatherConditions,
+            'clothing_suggestions' => $clothingSuggestionsText
+        ];
+
+        if ($clothingItems->isEmpty()) {
+            $responseData['message'] = 'No clothing suggestions available for the current conditions.';
         }
 
-        return response()->json($clothing);
+        return response()->json($responseData);
     }
 
     private function getTodayForecasts(array $forecastList)
@@ -74,22 +83,40 @@ class ClothingSuggestionsController extends Controller
         }, $forecasts);
 
         if (empty($temperatures)) {
-            return null; // Handle this case appropriately
+            return null; // Обработка случая отсутствия температур
         }
 
         $minTemp = min($temperatures);
         $maxTemp = max($temperatures);
 
         if ($maxTemp >= 30) {
-            return 1; // Very Hot
+            return 1; // Очень жарко
         } elseif ($maxTemp >= 20) {
-            return 2; // Warm
+            return 2; // Тепло
         } elseif ($minTemp >= 10) {
-            return 3; // Mild
+            return 3; // Умеренно
         } elseif ($minTemp >= 0) {
-            return 4; // Cool
+            return 4; // Прохладно
         } else {
-            return 5; // Cold
+            return 5; // Холодно
+        }
+    }
+
+    private function getTemperatureRangeText($temperatureRangeId)
+    {
+        switch ($temperatureRangeId) {
+            case 1:
+                return 'Very hot';
+            case 2:
+                return 'Warm';
+            case 3:
+                return 'Decent';
+            case 4:
+                return 'Cold';
+            case 5:
+                return 'Very cold';
+            default:
+                return 'Unknown';
         }
     }
 
@@ -117,18 +144,6 @@ class ClothingSuggestionsController extends Controller
                   ->where('warmth_level', '>=', 4);
         }
 
-        if (in_array('thunderstorm', $weatherConditions)) {
-            $query->where('protective', true);
-        }
-
-        if (in_array('mist', $weatherConditions) || in_array('fog', $weatherConditions)) {
-            $query->where('visibility_friendly', true);
-        }
-
-        if ($this->hasSignificantTemperatureVariation($forecasts)) {
-            $query->where('layerable', true);
-        }
-
         return $query;
     }
 
@@ -147,4 +162,32 @@ class ClothingSuggestionsController extends Controller
 
         return ($maxTemp - $minTemp) >= 8; // Adjust threshold as needed
     }
+
+    private function generateClothingSuggestionsText($clothingItems)
+    {
+        $suggestions = [];
+
+        foreach ($clothingItems as $item) {
+            $typeName = $item->type->name ?? null;
+            $styleName = $item->style->name ?? null;
+            $materialName = $item->material->name ?? null;
+
+            // Skip if no names are available
+            if (!$typeName && !$styleName && !$materialName) {
+                continue;
+            }
+
+            $parts = array_filter([$typeName, $styleName, $materialName]);
+            $itemName = implode(' ', $parts);
+
+            $suggestions[] = $itemName;
+        }
+
+        if (empty($suggestions)) {
+            return 'No clothing suggestions available for the current conditions.';
+        }
+
+        return implode(', ', $suggestions);
+    }
+
 }
