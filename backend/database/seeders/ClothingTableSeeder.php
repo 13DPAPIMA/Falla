@@ -4,8 +4,6 @@ namespace Database\Seeders;
 use Faker\Factory as Faker;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class ClothingTableSeeder extends Seeder
 {
