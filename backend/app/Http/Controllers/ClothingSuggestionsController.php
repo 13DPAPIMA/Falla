@@ -9,65 +9,142 @@ class ClothingSuggestionsController extends Controller
 {
     public function getClothingSuggestions(Request $request)
     {
-        // Проверяем, что данные о погоде существуют в запросе
-        if (!isset($request->weather)) {
-            return response()->json(['error' => 'Weather data is missing'], 400);
+        
+        // **Step 1: Validate the Request Data**
+        $validatedData = $request->validate([
+            'weather.list' => 'required|array|min:1',
+            'weather.list.*.main.temp' => 'required|numeric',
+            'weather.list.*.weather' => 'required|array|min:1',
+            'weather.list.*.dt_txt' => 'required|string',
+            'gender' => 'nullable|string|in:male,female,neutral'
+        ]);
+        
+        // **Step 2: Retrieve Weather Data and Gender from Validated Data**
+        $gender = $validatedData['gender'] ?? 'neutral';
+        $weather = $validatedData['weather'];
+
+        
+        // **Step 3: Get Today's Forecasts**
+        $forecasts = $this->getTodayForecasts($weather['list']);
+
+        if (empty($forecasts)) {
+            return response()->json(['error' => 'No forecast data available for today.'], 400);
         }
 
-        $weather = $request->weather; // Получаем данные о погоде из запроса
+        // **Step 4: Analyze Weather Conditions**
+        $temperatureRangeId = $this->getOverallTemperatureRangeId($forecasts);
+        $weatherConditions = $this->getOverallWeatherConditions($forecasts);
 
-        // Проверка, что в данных о погоде есть список прогнозов (list)
-        if (!isset($weather['list']) || !is_array($weather['list']) || empty($weather['list'])) {
-            return response()->json(['error' => 'Invalid weather data format. Missing "list" key or no forecasts.'], 400);
-        }
-
-        // Берем первый прогноз из списка (это можно изменить в зависимости от логики)
-        $currentForecast = $weather['list'][0];
-
-        // Проверка, что ключ 'main' существует в прогнозе
-        if (!isset($currentForecast['main']) || !isset($currentForecast['main']['temp'])) {
-            return response()->json(['error' => 'Invalid weather data format. Missing "main" key in forecast.'], 400);
-        }
-
-        // Проверка, что ключ 'weather' существует в прогнозе
-        if (!isset($currentForecast['weather'][0]['main'])) {
-            return response()->json(['error' => 'Invalid weather data format. Missing "weather" key in forecast.'], 400);
-        }
-
-        // Логика для определения диапазона температур
-        $temperature = $currentForecast['main']['temp']; // Температура
-        $weatherCondition = $currentForecast['weather'][0]['main']; // Основное состояние погоды (дождь, солнце и т.д.)
-
-        // Определяем диапазон температур
-        $temperatureRangeId = $this->getTemperatureRangeId($temperature);
-
-        // Логика определения типа погоды
-        $gender = 'neutral'; // Здесь можно задать пол на основе предпочтений пользователя
-
-        // Выполняем запрос на одежду, соответствующую погодным условиям
-        $clothing = Clothing::with('photo')
+        // **Step 5: Build the Clothing Query**
+        $clothingQuery = Clothing::with('photo')
             ->where('temperature_range_id', $temperatureRangeId)
-            ->where('gender', $gender)
-            ->when($weatherCondition === 'Rain', function ($query) {
-                // Если идет дождь, выбираем одежду с водонепроницаемостью
-                return $query->where('water_resistant', true);
-            })
-            ->get();
+            ->where('gender', $gender);
+
+        // **Step 6: Modify the Query Based on Weather Conditions**
+        $clothingQuery = $this->modifyQueryBasedOnWeather($clothingQuery, $weatherConditions, $forecasts);
+
+        // **Step 7: Get Clothing Suggestions**
+        $clothing = $clothingQuery->get();
+
+        if ($clothing->isEmpty()) {
+            return response()->json(['message' => 'No clothing suggestions available for the current conditions.'], 200);
+        }
 
         return response()->json($clothing);
     }
 
-    // Метод для определения температурного диапазона
-    private function getTemperatureRangeId($temperature)
+    private function getTodayForecasts(array $forecastList)
     {
-        if ($temperature >= 25) {
-            return 1; // Жаркая погода
-        } elseif ($temperature >= 15) {
-            return 2; // Теплая погода
-        } elseif ($temperature >= 5) {
-            return 3; // Прохладная погода
-        } else {
-            return 4; // Холодная погода
+        $today = date('Y-m-d');
+        $todayForecasts = [];
+
+        foreach ($forecastList as $forecast) {
+            if (isset($forecast['dt_txt']) && strpos($forecast['dt_txt'], $today) === 0) {
+                $todayForecasts[] = $forecast;
+            }
         }
+
+        return $todayForecasts;
+    }
+
+    private function getOverallTemperatureRangeId(array $forecasts)
+    {
+        $temperatures = array_map(function ($forecast) {
+            return $forecast['main']['temp'];
+        }, $forecasts);
+
+        if (empty($temperatures)) {
+            return null; // Handle this case appropriately
+        }
+
+        $minTemp = min($temperatures);
+        $maxTemp = max($temperatures);
+
+        if ($maxTemp >= 30) {
+            return 1; // Very Hot
+        } elseif ($maxTemp >= 20) {
+            return 2; // Warm
+        } elseif ($minTemp >= 10) {
+            return 3; // Mild
+        } elseif ($minTemp >= 0) {
+            return 4; // Cool
+        } else {
+            return 5; // Cold
+        }
+    }
+
+    private function getOverallWeatherConditions(array $forecasts)
+    {
+        $conditions = [];
+
+        foreach ($forecasts as $forecast) {
+            foreach ($forecast['weather'] as $weather) {
+                $conditions[] = strtolower($weather['main']);
+            }
+        }
+
+        return array_unique($conditions);
+    }
+
+    private function modifyQueryBasedOnWeather($query, array $weatherConditions, array $forecasts)
+    {
+        if (in_array('rain', $weatherConditions) || in_array('drizzle', $weatherConditions)) {
+            $query->where('water_resistant', true);
+        }
+
+        if (in_array('snow', $weatherConditions)) {
+            $query->where('water_resistant', true)
+                  ->where('warmth_level', '>=', 4);
+        }
+
+        if (in_array('thunderstorm', $weatherConditions)) {
+            $query->where('protective', true);
+        }
+
+        if (in_array('mist', $weatherConditions) || in_array('fog', $weatherConditions)) {
+            $query->where('visibility_friendly', true);
+        }
+
+        if ($this->hasSignificantTemperatureVariation($forecasts)) {
+            $query->where('layerable', true);
+        }
+
+        return $query;
+    }
+
+    private function hasSignificantTemperatureVariation(array $forecasts)
+    {
+        $temperatures = array_map(function ($forecast) {
+            return $forecast['main']['temp'];
+        }, $forecasts);
+
+        if (empty($temperatures)) {
+            return false;
+        }
+
+        $maxTemp = max($temperatures);
+        $minTemp = min($temperatures);
+
+        return ($maxTemp - $minTemp) >= 8; // Adjust threshold as needed
     }
 }
