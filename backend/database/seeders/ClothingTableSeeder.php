@@ -1,6 +1,7 @@
 <?php
 
 namespace Database\Seeders;
+use Faker\Factory as Faker;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -10,44 +11,34 @@ class ClothingTableSeeder extends Seeder
 {
     public function run()
     {
-        DB::table('clothing')->insert([
-            [
-                'style_id' => 1, // Casual
-                'photo_id' => 3, // T-Shirt photo
-                'type_id' => 1,  // T-Shirt
-                'temperature_range_id' => 3, // 11°C - 20°C
-                'material_id' => 1, // Cotton
-                'gender' => 'neutral',
-                'color' => 'White',
-                'water_resistant' => false,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'style_id' => 2, // Sport
-                'photo_id' => 2, // Jeans photo
-                'type_id' => 2,  // Jeans
-                'temperature_range_id' => 2, // 0°C - 10°C
-                'material_id' => 5, // Denim
-                'gender' => 'neutral',
-                'color' => 'Blue',
-                'water_resistant' => false,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'style_id' => 3, // Formal
-                'photo_id' => 1, // Jacket photo
-                'type_id' => 3,  // Jacket
-                'temperature_range_id' => 2, // 0°C - 10°C
-                'material_id' => 4, // Leather
-                'gender' => 'male',
-                'color' => 'Black',
-                'water_resistant' => true,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            // Add more clothing items as needed
-        ]);
+        $faker = Faker::create(); // Create Faker instance
+
+        $combinations = [];
+
+        // Generate all possible unique combinations
+        foreach (range(1, 5) as $style_id) {
+            foreach (range(1, 5) as $type_id) {
+                foreach (range(1, 5) as $temperature_range_id) {
+                    foreach (range(1, 5) as $material_id) {
+                        $combinations[] = [
+                            'style_id' => $style_id,
+                            'type_id' => $type_id,
+                            'temperature_range_id' => $temperature_range_id,
+                            'material_id' => $material_id,
+                            'gender' => $faker->randomElement(['male', 'female', 'neutral']), // Use local $faker
+                            'color' => $faker->safeColorName(), // Use local $faker
+                            'water_resistant' => $faker->boolean(), // Use local $faker
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
+                    }
+                }
+            }
+        }
+
+        // Insert combinations into the database
+        foreach ($combinations as $combination) {
+            \App\Models\Clothing::create($combination);
+        }
     }
 }

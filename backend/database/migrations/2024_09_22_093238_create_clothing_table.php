@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('clothing', function (Blueprint $table) {
             $table->id();
             $table->foreignId('style_id')->references('id')->on('styles');
-            $table->foreignId('photo_id')->constrained('clothing_photos');
+            $table->foreignId('photo_id')->nullable()->constrained('clothing_photos');
             $table->foreignId('type_id')->constrained('clothing_types');
             $table->foreignId('temperature_range_id')->constrained('temperature_ranges');
             $table->foreignId('material_id')->constrained('clothing_materials');
@@ -24,7 +24,7 @@ return new class extends Migration
             $table->timestamps();
         });
     }
-    
+
 
     /**
      * Reverse the migrations.
