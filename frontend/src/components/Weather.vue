@@ -1,185 +1,139 @@
 <template>
   <div class="weather-wrapper">
     <div class="city-input">
-      <input v-model="city" type="text" placeholder="Enter city" />
-      <button @click="fetchWeather">Get Weather</button>
+      <Input v-model="city" type="text" placeholder="Enter city" />
+      <Button class="ml-6" @click="fetchWeather">Get Weather</Button>
     </div>
 
     <div v-if="errorMessage" class="error-message">
       {{ errorMessage }}
     </div>
-    
+
     <div v-if="todayForecast && todayForecast.length" class="weather-container">
       <h2 class="city-name">{{ weather.city.name }} Today's Weather</h2>
-      <hr class="divider">
+
+      <Separator />
 
       <div v-for="(forecast, index) in todayForecast" :key="index" class="forecast-item">
+        <!-- Информация о погоде -->
         <div class="time-info">
           <div class="formatted-time">{{ formatTime(forecast.dt_txt) }}</div>
           <div class="weather-description">{{ forecast.weather[0].description }}</div>
         </div>
-
         <div class="temperature-info">
           <div>Temp: {{ forecast.main.temp }}°C (Feels like {{ forecast.main.feels_like }}°C)</div>
           <div>Max: {{ forecast.main.temp_max }}°C | Min: {{ forecast.main.temp_min }}°C</div>
         </div>
-
         <div class="additional-info">
           <div>Humidity: {{ forecast.main.humidity }}%</div>
           <div>Wind: {{ forecast.wind.speed }} km/h, gusts up to {{ forecast.wind.gust }} km/h</div>
           <div>Cloudiness: {{ forecast.clouds.all }}%</div>
           <div>Rain: {{ forecast.rain?.['3h'] || 0 }} mm</div>
         </div>
-
         <img
-          v-if="forecast.weather[0]?.icon"
-          :src="`https://openweathermap.org/img/w/${forecast.weather[0].icon}.png`"
-          class="weather-icon"
-          alt="Weather Icon"
+            v-if="forecast.weather[0]?.icon"
+            :src="`https://openweathermap.org/img/w/${forecast.weather[0].icon}.png`"
+            class="weather-icon"
+            alt="Weather Icon"
         />
-        <hr class="divider">
       </div>
-
-      <div v-if="cloudinaryImageUrl" class="cloudinary-image">
-        <h3>Cloudinary Image:</h3>
-        <img :src="cloudinaryImageUrl" alt="Cloudinary Image" />
-      </div>
-
     </div>
 
-    
     <div v-else>
       <div class="loading-message">No weather data for today.</div>
     </div>
   </div>
 
-  <div class="clothing-suggestions">
-    <h1>Clothing Suggestions</h1>
-    <div v-for="item in clothing" :key="item.id" class="clothing-item">
-      <h3>{{ item.type }}</h3>
-      <img :src="item.photo_url" alt="Clothing Photo" />
-      <p>Style: {{ item.style }}</p>
-      <p>Color: {{ item.color }}</p>
-    </div>
-  </div>
+  <Separator />
 
-  <div class="upload-photo">
-    <form @submit.prevent="uploadPhoto" enctype="multipart/form-data">
-      <label for="photo">Choose a photo:</label>
-      <input type="file" id="photo" @change="handleFileUpload" />
-      <button type="submit">Upload</button>
-    </form>
-
-    <div v-if="uploadedPhotoUrl">
-      <h3>Uploaded Photo:</h3>
-      <img :src="uploadedPhotoUrl" alt="Uploaded Photo" />
-    </div>
-  </div>
-
+  <ClothingSuggestions v-if="weather" :weather="weather" />
 </template>
 
-<script>
-import axios from 'axios';
+<script setup lang="ts">
+import { ref, onMounted, computed } from 'vue'
+import api from '@/api.ts'
+import { Separator } from '@/components/ui/separator'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import ClothingSuggestions from './ClothingSuggestions.vue'
 
-export default {
-  data() {
-    return {
-      weather: null,
-      city: 'Riga', // Начальный город
-      errorMessage: null,
-      todayForecast: [],
-      clothing: [], // Список одежды
-    };
-  },
-  methods: {
-    async fetchWeather() {
-      const cityToFetch = this.city || 'Riga';
-
-      try {
-
-        // Запрос погоды по городу
-        const response = await axios.get(`/api/weather?city=${encodeURIComponent(cityToFetch)}`);
-
-        
-        this.weather = response.data;
-        this.errorMessage = null;
-
-        // Получение предложений одежды на основе погоды
-        this.fetchClothingSuggestions();
-
-        this.filterTodayForecast();
-      } catch (error) {
-        console.error('Error fetching weather data:', error);
-
-        if (error.response) {
-          this.errorMessage = `Error ${error.response.status}: ${error.response.statusText}`;
-        } else if (error.request) {
-          this.errorMessage = 'No response received from server.';
-        } else {
-          this.errorMessage = `Error: ${error.message}`;
-        }
-
-        this.weather = null;
-      }
-    },
-    async fetchClothingSuggestions() {
-  try {
-    // Логируем данные о погоде для проверки структуры перед отправкой
-      console.log('Weather data being sent to server:', this.weather);
-
-    // Отправляем данные о погоде на сервер
-      const response = await axios.post('api/clothing-suggestions', {
-        weather: this.weather // Отправляем объект weather, содержащий ключ list
-      });
-
-      this.clothing = response.data; // Получаем предложения одежды
-    } catch (error) {
-      console.error('Error fetching clothing suggestions:', error);
+interface WeatherData {
+  city: {
+    name: string
+    country: string
+  }
+  list: Array<{
+    dt_txt: string
+    main: {
+      temp: number
+      feels_like: number
+      humidity: number
     }
-  },
-    filterTodayForecast() {
-      if (!this.weather || !this.weather.list) return;
+    weather: Array<{
+      description: string
+      icon: string
+    }>
+    wind: {
+      speed: number
+    }
+  }>
+}
 
-      const today = new Date().toISOString().split('T')[0];
-      // Фильтруем только прогнозы на сегодняшний день
-      this.todayForecast = this.weather.list.filter(forecast => {
-        const forecastDate = forecast.dt_txt.split(' ')[0];
-        return forecastDate === today;
-      });
-    },
-    formatTime(dateTime) {
-      const options = { hour: '2-digit', minute: '2-digit' };
-      return new Date(dateTime).toLocaleTimeString(undefined, options);
-    },
-  },
-  mounted() {
-    this.fetchWeather(); // Получаем погоду сразу после загрузки компонента
-  },
-};
+const weather = ref<WeatherData | null>(null)
+const city = ref('Riga')
+const errorMessage = ref<string | null>(null)
+const isLoading = ref(false)
+
+const todayForecast = computed(() => {
+  if (!weather.value || !weather.value.list) return []
+
+  const today = new Date().toISOString().split('T')[0]
+  return weather.value.list.filter((forecast) => {
+    const forecastDate = forecast.dt_txt.split(' ')[0]
+    return forecastDate === today
+  })
+})
+
+const fetchWeather = async () => {
+  const cityToFetch = city.value || 'Riga'
+  isLoading.value = true
+  errorMessage.value = null
+
+  try {
+    const response = await api.get<WeatherData>(`/api/weather?city=${encodeURIComponent(cityToFetch)}`)
+    weather.value = response.data
+  } catch (error: any) {
+    console.error('Error fetching weather data:', error)
+
+    if (api.isAxiosError(error)) {
+      if (error.response) {
+        errorMessage.value = `Error ${error.response.status}: ${error.response.statusText}`
+      } else if (error.request) {
+        errorMessage.value = 'No response received from server.'
+      } else {
+        errorMessage.value = `Error: ${error.message}`
+      }
+    } else {
+      errorMessage.value = 'An unexpected error occurred.'
+    }
+
+    weather.value = null
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const formatTime = (dateTime: string) => {
+  const options: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' }
+  return new Date(dateTime).toLocaleTimeString(undefined, options)
+}
+
+onMounted(() => {
+  fetchWeather()
+})
 </script>
 
 <style scoped>
-.upload-photo {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-input[type="file"] {
-  margin-bottom: 10px;
-}
-
-button {
-  background-color: #007bff;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #0056b3;
-}
 
 img {
   margin-top: 20px;
@@ -199,7 +153,6 @@ img {
 }
 
 .weather-container {
-  font-family: Arial, sans-serif;
   border: 1px solid #ccc;
   padding: 20px;
   margin-top: 20px;
@@ -212,28 +165,6 @@ img {
   display: flex;
   justify-content: center;
   margin-bottom: 20px;
-}
-
-.city-input input {
-  padding: 8px;
-  font-size: 16px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-}
-
-.city-input button {
-  padding: 8px 12px;
-  margin-left: 10px;
-  font-size: 16px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.city-input button:hover {
-  background-color: #0056b3;
 }
 
 .error-message {
@@ -250,7 +181,6 @@ img {
   max-width: 600px;
   margin: 0 auto;
   padding: 20px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .error-message {
@@ -322,7 +252,4 @@ img {
   color: #666;
 }
 
-.divider {
-  margin: 20px 0;
-}
 </style>

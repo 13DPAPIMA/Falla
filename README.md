@@ -90,6 +90,24 @@ cd Falla
     ```bash
     php artisan serve
     ```
+
+# Instructions for obtaining an API key from Cloudinary
+
+## Sign Up / Log In:
+
+Go to the Cloudinary website.
+If you don't have an account, click on "Sign Up" and follow the instructions to create one. If you already have an account, click on "Log In."
+Access the Dashboard:
+
+After logging in, you will be directed to your Cloudinary dashboard.
+## Find Your API Key:
+
+In the dashboard, look for the "Account Details" section. You can usually find this under your profile icon or in the sidebar.
+Click on "Settings" (or it may be labeled as "API Keys").
+
+## Here, you will see your API Key, API Secret, and Cloud Name. Note these down, as you'll need them for your application.
+
+    
 # Instructions for obtaining an API key from OpenWeatherMap
 
 ## Step 1: Register on the OpenWeatherMap website
