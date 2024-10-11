@@ -168,26 +168,33 @@ class ClothingSuggestionsController extends Controller
         $suggestions = [];
 
         foreach ($clothingItems as $item) {
-            $typeName = $item->type->name ?? null;
-            $styleName = $item->style->name ?? null;
-            $materialName = $item->material->name ?? null;
+            $typeName = $item->type->type ?? null;
+            $styleName = $item->style->style ?? null;
+            $materialName = $item->material->material ?? null;
+            $photoName = $item->photo->photo ?? null;
 
             // Skip if no names are available
             if (!$typeName && !$styleName && !$materialName) {
                 continue;
             }
 
-            $parts = array_filter([$typeName, $styleName, $materialName]);
-            $itemName = implode(' ', $parts);
-
-            $suggestions[] = $itemName;
+            $suggestionItem = [
+                'type' => $typeName,
+                'style' => $styleName,
+                'material' => $materialName,
+                'photo' => $photoName
+            ];
+    
+            // Добавляем в общий массив
+            $suggestions[] = $suggestionItem;
         }
 
         if (empty($suggestions)) {
             return 'No clothing suggestions available for the current conditions.';
         }
 
-        return implode(', ', $suggestions);
+
+        return ($suggestions);
     }
 
 }
