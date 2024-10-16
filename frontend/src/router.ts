@@ -4,6 +4,7 @@ import Weather from '@/components/Weather.vue';
 import Register from '@/components/auth/Register.vue';
 import Login from '@/components/auth/Login.vue';
 import Profile from '@/components/Profile.vue';
+import WardrobeView from '@/components/WardrobeView.vue';
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -30,6 +31,11 @@ const routes: Array<RouteRecordRaw> = [
         path: '/weather',
         name: 'Weather',
         component: Weather,
+    },
+    {
+        path: '/wardrobe',
+        name: 'Wardrobe',
+        component: WardrobeView,
     },
 ];
 
