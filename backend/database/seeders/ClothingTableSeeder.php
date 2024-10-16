@@ -11,32 +11,34 @@ class ClothingTableSeeder extends Seeder
     {
         $faker = Faker::create(); // Create Faker instance
 
-        $combinations = [];
+        $genderMapping = [
+            1 => 'neutral', // T-Shirt
+            2 => 'neutral', // Jeans
+            3 => 'male',    // Jacket
+            4 => 'female',  // Dress
+            5 => 'neutral', // Sweater
+        ];
 
         // Generate all possible unique combinations
-        foreach (range(1, 5) as $style_id) {
-            foreach (range(1, 5) as $type_id) {
-                foreach (range(1, 5) as $temperature_range_id) {
-                    foreach (range(1, 5) as $material_id) {
-                        $combinations[] = [
+        foreach (range(1, 5) as $type_id) {
+            $gender = $genderMapping[$type_id];
+            foreach (range(1, 5) as $temperature_range_id) {
+                foreach (range(1, 3) as $style_id) {
+                    foreach (range(1, 3) as $material_id) {
+                        \App\Models\Clothing::create([
                             'style_id' => $style_id,
                             'type_id' => $type_id,
-                            'temperature_range_id' => $temperature_range_id,
+                            'temperature_range_id' => $faker->numberBetween(1, 5),
                             'material_id' => $material_id,
-                            'gender' => $faker->randomElement(['male', 'female', 'neutral']), // Use local $faker
-                            'color' => $faker->safeColorName(), // Use local $faker
-                            'water_resistant' => $faker->boolean(), // Use local $faker
+                            'gender' => $gender,
+                            'color' => $faker->safeColorName(),
+                            'water_resistant' => $faker->boolean(),
                             'created_at' => now(),
                             'updated_at' => now(),
-                        ];
+                        ]);
                     }
                 }
             }
-        }
-
-        // Insert combinations into the database
-        foreach ($combinations as $combination) {
-            \App\Models\Clothing::create($combination);
         }
     }
 }

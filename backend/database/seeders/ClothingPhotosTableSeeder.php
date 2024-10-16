@@ -14,8 +14,6 @@ class ClothingPhotosTableSeeder extends Seeder
             ['cloudinary_public_id' => 'dfgoihjsdfoijsfoij','photo_url' => 'photos/tshirt.jpg', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
             ['cloudinary_public_id' => 'dfgoihjsdfoijsfoij','photo_url' => 'photos/jeans.jpg', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
             ['cloudinary_public_id' => 'dfgoihjsdfoijsfoij','photo_url' => 'photos/jacket.jpg', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['cloudinary_public_id' => 'dfgoihjsdfoijsfoij','photo_url' => 'photos/dress.jpg', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['cloudinary_public_id' => 'dfgoihjsdfoijsfoij','photo_url' => 'photos/sweater.jpg', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
             // Add more photos as needed
         ]);
     }
