@@ -34,7 +34,7 @@ class WardrobeController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function availableClothing()
+    public function availableClothing() // TODO: sort by clothes that are not already in wardrobe
     {
         // Retrieve all clothing items from the database
         $clothingItems = Clothing::all();
@@ -50,12 +50,10 @@ class WardrobeController extends Controller
      */
     public function addToWardrobe(Request $request)
     {
-        // Validate the request data
         $request->validate([
             'clothing_id' => 'required|exists:clothing,id',
         ]);
 
-        // Get or create the user's wardrobe
         $wardrobe = Wardrobe::firstOrCreate(['user_id' => auth()->id()]);
 
         // Check if the clothing item is already in the wardrobe
@@ -67,7 +65,6 @@ class WardrobeController extends Controller
             return response()->json(['message' => 'Clothing item already in wardrobe'], 409);
         }
 
-        // Add clothing item to the user's wardrobe
         WardrobeItem::create([
             'wardrobe_id' => $wardrobe->id,
             'clothing_id' => $request->clothing_id,
@@ -82,16 +79,14 @@ class WardrobeController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function removeFromWardrobe($id)
+    public function removeFromWardrobe($id) // TODO: it is not working =)
     {
-        // Find the wardrobe item by ID
         $wardrobeItem = WardrobeItem::find($id);
 
         if (!$wardrobeItem) {
             return response()->json(['message' => 'Wardrobe item not found'], 404);
         }
 
-        // Delete the wardrobe item
         $wardrobeItem->delete();
 
         return response()->json(['message' => 'Clothing item removed from wardrobe successfully'], 200);
