@@ -31,6 +31,11 @@ const routes: Array<RouteRecordRaw> = [
         name: 'Weather',
         component: Weather,
     },
+    {   
+        path: '/update',
+        name: 'update',
+        component: Profile
+    },
 ];
 
 const router = createRouter({

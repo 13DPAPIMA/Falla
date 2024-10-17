@@ -54,7 +54,7 @@ class AuthController extends Controller
         $user = $request->user();
 
         $validatedData = $request->validate([
-            'email' => 'sometimes|email|unique:users,email,' . $user->id,
+            'email' => 'min:8|max:50|sometimes|email|unique:users,email,' . $user->id,
             'password' => 'sometimes|string|min:8|confirmed',
             'gender' => 'sometimes|in:Male,Female',
         ]);
