@@ -2,13 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Clothing;
-use App\Models\Wardrobe;
-use App\Models\WardrobeItem;
+use App\Services\WardrobeService;
 use Illuminate\Http\Request;
 
 class WardrobeController extends Controller
 {
+    protected $wardrobeService;
+
+    public function __construct(WardrobeService $wardrobeService)
+    {
+        $this->wardrobeService = $wardrobeService;
+    }
+
     /**
      * Display the user's wardrobe.
      *
@@ -16,15 +21,13 @@ class WardrobeController extends Controller
      */
     public function index()
     {
-        // Get the user's wardrobe
-        $wardrobe = Wardrobe::where('user_id', auth()->id())->first();
+        $wardrobe = $this->wardrobeService->getUserWardrobe(auth()->id());
 
         if (!$wardrobe) {
             return response()->json(['message' => 'Your wardrobe is empty'], 200);
         }
 
-        // Load wardrobe items and their associated clothing
-        $wardrobeItems = WardrobeItem::with('clothing')->where('wardrobe_id', $wardrobe->id)->get();
+        $wardrobeItems = $this->wardrobeService->getWardrobeItems($wardrobe->id);
 
         return response()->json($wardrobeItems, 200);
     }
@@ -36,18 +39,12 @@ class WardrobeController extends Controller
      */
     public function availableClothing()
     {
-        $wardrobe = Wardrobe::where('user_id', auth()->id())->first();
+        $wardrobe = $this->wardrobeService->getUserWardrobe(auth()->id());
 
         if ($wardrobe) {
-            // Get clothing items not already in the wardrobe
-            $clothingItems = Clothing::whereNotIn('id', function ($query) use ($wardrobe) {
-                $query->select('clothing_id')
-                    ->from('wardrobe_items')
-                    ->where('wardrobe_id', $wardrobe->id);
-            })->get();
+            $clothingItems = $this->wardrobeService->getAvailableClothing($wardrobe->id);
         } else {
-            // If wardrobe is empty, show all clothing items
-            $clothingItems = Clothing::all();
+            $clothingItems = $this->wardrobeService->getAllClothingItems();
         }
 
         return response()->json($clothingItems, 200);
@@ -65,52 +62,21 @@ class WardrobeController extends Controller
             'clothing_id' => 'required|exists:clothing,id',
         ]);
 
-        $wardrobe = Wardrobe::firstOrCreate(['user_id' => auth()->id()]);
+        $result = $this->wardrobeService->addClothingToWardrobe(auth()->id(), $request->clothing_id);
 
-        // Check if the clothing item is already in the wardrobe
-        $exists = WardrobeItem::where('wardrobe_id', $wardrobe->id)
-            ->where('clothing_id', $request->clothing_id)
-            ->exists();
-
-        if ($exists) {
-            return response()->json(['message' => 'Clothing item already in wardrobe'], 409);
-        }
-
-        WardrobeItem::create([
-            'wardrobe_id' => $wardrobe->id,
-            'clothing_id' => $request->clothing_id,
-        ]);
-
-        return response()->json(['message' => 'Clothing item added to wardrobe successfully'], 201);
+        return response()->json($result, $result['status']);
     }
 
     /**
      * Remove a clothing item from the user's wardrobe.
      *
-     * @param  int  $id
+     * @param  int  $clothingId
      * @return \Illuminate\Http\Response
      */
     public function removeFromWardrobe($clothingId)
     {
-        // Find the wardrobe item by the clothing ID and ensure it belongs to the authenticated user's wardrobe
-        $wardrobe = Wardrobe::where('user_id', auth()->id())->first();
+        $result = $this->wardrobeService->removeClothingFromWardrobe($clothingId, auth()->id());
 
-        if (!$wardrobe) {
-            return response()->json(['message' => 'Wardrobe not found'], 404);
-        }
-
-        // Find the wardrobe item with the provided clothing ID
-        $wardrobeItem = WardrobeItem::where('wardrobe_id', $wardrobe->id)
-            ->where('clothing_id', $clothingId)
-            ->first();
-
-        if (!$wardrobeItem) {
-            return response()->json(['message' => 'Clothing item not found in wardrobe'], 404);
-        }
-
-        // Delete the wardrobe item
-        $wardrobeItem->delete();
-
-        return response()->json(['message' => 'Clothing item removed from wardrobe successfully'], 200);
+        return response()->json($result, $result['status']);
     }
 }

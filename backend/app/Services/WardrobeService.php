@@ -5,17 +5,37 @@ namespace App\Services;
 use App\Models\Clothing;
 use App\Models\Wardrobe;
 use App\Models\WardrobeItem;
+use Illuminate\Support\Facades\Auth;
 
 class WardrobeService
 {
     public function getUserWardrobe($userId)
     {
-        return Wardrobe::firstOrCreate(['user_id' => $userId]);
+        return Wardrobe::where('user_id', $userId)->first();
+    }
+
+    public function getWardrobeItems($wardrobeId)
+    {
+        return WardrobeItem::with('clothing')->where('wardrobe_id', $wardrobeId)->get();
+    }
+
+    public function getAvailableClothing($wardrobeId)
+    {
+        return Clothing::whereNotIn('id', function ($query) use ($wardrobeId) {
+            $query->select('clothing_id')
+                ->from('wardrobe_items')
+                ->where('wardrobe_id', $wardrobeId);
+        })->get();
     }
 
     public function addClothingToWardrobe($userId, $clothingId)
     {
         $wardrobe = $this->getUserWardrobe($userId);
+
+        // Check if the wardrobe exists
+        if (!$wardrobe) {
+            $wardrobe = Wardrobe::create(['user_id' => $userId]);
+        }
 
         // Check if the clothing item is already in the wardrobe
         $exists = WardrobeItem::where('wardrobe_id', $wardrobe->id)
@@ -23,7 +43,7 @@ class WardrobeService
             ->exists();
 
         if ($exists) {
-            return ['success' => false, 'message' => 'Clothing item already in wardrobe', 'status' => 409];
+            return ['message' => 'Clothing item already in wardrobe', 'status' => 409];
         }
 
         // Add clothing item to the wardrobe
@@ -32,26 +52,30 @@ class WardrobeService
             'clothing_id' => $clothingId,
         ]);
 
-        return ['success' => true, 'data' => $wardrobeItem, 'status' => 201];
+        return ['data' => $wardrobeItem, 'status' => 201];
     }
 
-    public function removeClothingFromWardrobe($wardrobeItemId, $userId)
+    public function removeClothingFromWardrobe($clothingId, $userId)
     {
-        // Find the wardrobe item and check if it belongs to the user
-        $wardrobeItem = WardrobeItem::where('id', $wardrobeItemId)
-            ->whereHas('wardrobe', function ($query) use ($userId) {
-                $query->where('user_id', $userId);
-            })
+        $wardrobe = $this->getUserWardrobe($userId);
+
+        if (!$wardrobe) {
+            return ['message' => 'Wardrobe not found', 'status' => 404];
+        }
+
+        // Find the wardrobe item with the provided clothing ID
+        $wardrobeItem = WardrobeItem::where('wardrobe_id', $wardrobe->id)
+            ->where('clothing_id', $clothingId)
             ->first();
 
         if (!$wardrobeItem) {
-            return ['success' => false, 'message' => 'Wardrobe item not found', 'status' => 404];
+            return ['message' => 'Clothing item not found in wardrobe', 'status' => 404];
         }
 
-        // Delete the item from the wardrobe
+        // Delete the wardrobe item
         $wardrobeItem->delete();
 
-        return ['success' => true, 'message' => 'Clothing item removed from wardrobe', 'status' => 200];
+        return ['message' => 'Clothing item removed from wardrobe successfully', 'status' => 200];
     }
 
     public function getAllClothingItems()
