@@ -26,23 +26,6 @@ class ClothingController extends Controller
     }
 
     /**
-     * Add a clothing item to the user's wardrobe.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function addToWardrobe(Request $request)
-    {
-        $request->validate([
-            'clothing_id' => 'required|exists:clothing,id',
-        ]);
-
-        $result = $this->wardrobeService->addClothingToWardrobe($request->user()->id, $request->clothing_id);
-
-        return response()->json($result['message'], $result['status']);
-    }
-
-    /**
      * Display the specified clothing item.
      *
      * @param  int  $id
