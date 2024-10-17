@@ -28,21 +28,15 @@ Route::post('/clothing-suggestions', [ClothingSuggestionsController::class, 'get
 Route::post('/upload-photo', [App\Http\Controllers\PhotoController::class, 'uploadPhoto']);
 
 
-// warbrobe routes
+// wardrobe routes
 use App\Http\Controllers\ClothingController;
 use App\Http\Controllers\WardrobeController;
-use App\Http\Controllers\WardrobeItemController;
 
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/wardrobe', [WardrobeController::class, 'index']);
-    Route::get('/wardrobe/available-clothing', [WardrobeController::class, 'availableClothing']);
     Route::post('/wardrobe', [WardrobeController::class, 'addToWardrobe']);
     Route::delete('/wardrobe/{id}', [WardrobeController::class, 'removeFromWardrobe']);
-
-    Route::post('/wardrobe-items', [WardrobeItemController::class, 'addToWardrobe']);
-    Route::put('/wardrobe-items/{id}', [WardrobeItemController::class, 'updateWardrobeItem']);
-    Route::delete('/wardrobe-items/{id}', [WardrobeItemController::class, 'deleteWardrobeItem']);
 
     Route::get('/clothing', [ClothingController::class, 'index']);
     Route::get('/clothing/{id}', [ClothingController::class, 'show']);
