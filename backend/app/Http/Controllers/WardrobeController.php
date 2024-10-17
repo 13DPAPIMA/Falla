@@ -79,14 +79,25 @@ class WardrobeController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function removeFromWardrobe($id) // TODO: it is not working =)
+    public function removeFromWardrobe($clothingId)
     {
-        $wardrobeItem = WardrobeItem::find($id);
+        // Find the wardrobe item by the clothing ID and ensure it belongs to the authenticated user's wardrobe
+        $wardrobe = Wardrobe::where('user_id', auth()->id())->first();
 
-        if (!$wardrobeItem) {
-            return response()->json(['message' => 'Wardrobe item not found'], 404);
+        if (!$wardrobe) {
+            return response()->json(['message' => 'Wardrobe not found'], 404);
         }
 
+        // Find the wardrobe item with the provided clothing ID
+        $wardrobeItem = WardrobeItem::where('wardrobe_id', $wardrobe->id)
+            ->where('clothing_id', $clothingId)
+            ->first();
+
+        if (!$wardrobeItem) {
+            return response()->json(['message' => 'Clothing item not found in wardrobe'], 404);
+        }
+
+        // Delete the wardrobe item
         $wardrobeItem->delete();
 
         return response()->json(['message' => 'Clothing item removed from wardrobe successfully'], 200);
