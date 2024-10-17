@@ -17,9 +17,9 @@ import RainyCloud3 from '../assets/Rainy_Cloud.png';
 import CloudyCloud1 from '../assets/Cloud_1.png';
 import CloudyCloud2 from '../assets/Cloud_2.png';
 import CloudyCloud3 from '../assets/Cloud_3.png';
-import DefaultCloud1 from '../assets/Cloud_Background_1.jpg';
-import DefaultCloud2 from '../assets/Cloud_Background_1.jpg';
-import DefaultCloud3 from '../assets/Cloud_Background_1.jpg';
+import DefaultCloud1 from '../assets/Smile.png';
+import DefaultCloud2 from '../assets/Smile.png';
+import DefaultCloud3 from '../assets/Smile.png';
 
 const cloudImages = ref([DefaultCloud1, DefaultCloud2, DefaultCloud3]);
 
@@ -93,16 +93,17 @@ const navigateToOtherPage = () => {
 /* Add styles for the round button */
 .round-button {
   position: absolute; /* Use absolute positioning */
-  top: 90%; /* Adjust this value to move the button higher */
+  top: 93%; /* Adjust this value to move the button higher */
   left: 50%; /* Center horizontally */
   transform: translate(-50%, -50%); /* Center the button */
-  width: 150px;
-  height: 80px;
-  border-radius: 45%;
-  background-color: #84c1da; /* Green background */
-  color: #2b2a29; /* White text */
-  border: none;
+  width: 180px;
+  height: 70px;
+  border-radius: 100%;
+  background-color: #E5C9AA; /* Green background */
+  color: #73695C; /* Text color */
+  border: 3px solid #000000; /* Border color */
   font-size: 1.5rem;
+  font-weight: bold; /* Match this with your title font */
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -146,7 +147,7 @@ const navigateToOtherPage = () => {
 }
 
 .title {
-  font-size: 9rem;
+  font-size: 7rem;
   margin: 0;
 }
 
