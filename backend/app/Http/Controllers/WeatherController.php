@@ -2,40 +2,76 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\WardrobeService;
 use Illuminate\Http\Request;
 
-class WeatherController extends Controller
+class WardrobeController extends Controller
 {
-    public function getWeather(Request $request)
+    protected $wardrobeService;
+
+    public function __construct(WardrobeService $wardrobeService)
     {
-        $city = $request->input('city', 'Riga');
-        $apiKey = env('OPENWEATHERMAP_API_KEY');
+        $this->wardrobeService = $wardrobeService;
+    }
 
-        $encodedCity = urlencode($city);
-        $fiveDaysUrl =  "https://api.openweathermap.org/data/2.5/forecast?q={$encodedCity}&lang=en&units=metric&appid={$apiKey}";
+    /**
+     * Display the user's wardrobe.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+        $wardrobe = $this->wardrobeService->getUserWardrobe(auth()->id());
 
-        $ch = curl_init();
+        // Load wardrobe items and their associated clothing
+        $wardrobeItems = $wardrobe->wardrobeItems()->with('clothing')->get();
 
-        curl_setopt($ch, CURLOPT_HEADER, 0);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_URL, $fiveDaysUrl);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-        curl_setopt($ch, CURLOPT_VERBOSE, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
-        $response = curl_exec($ch);
-        curl_close($ch);
-
-        if (empty($response)) {
-            return response()->json(['error' => 'No data received from OpenWeatherMap'], 500);
+        if ($wardrobeItems->isEmpty()) {
+            return response()->json(['message' => 'Your wardrobe is empty'], 200);
         }
 
-        $data = json_decode($response, true);
+        return response()->json($wardrobeItems, 200);
+    }
 
-        if (isset($data['cod']) && $data['cod'] !== '200') {
-            return response()->json(['error' => $data['message']], $data['cod']);
-        }
+    /**
+     * Show all available clothing options to choose from.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function availableClothing()
+    {
+        $clothingItems = $this->wardrobeService->getAllClothingItems();
 
-        return response()->json($data);
+        return response()->json($clothingItems, 200);
+    }
+
+    /**
+     * Add a clothing item to the user's wardrobe.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function addToWardrobe(Request $request)
+    {
+        $request->validate([
+            'clothing_id' => 'required|exists:clothing,id',
+        ]);
+
+        $result = $this->wardrobeService->addClothingToWardrobe(auth()->id(), $request->clothing_id);
+
+        return response()->json($result['message'], $result['status']);
+    }
+
+    /**
+     * Remove a clothing item from the user's wardrobe.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function removeFromWardrobe($id)
+    {
+        $result = $this->wardrobeService->removeClothingFromWardrobe($id, auth()->id());
+
+        return response()->json($result['message'], $result['status']);
     }
 }
