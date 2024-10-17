@@ -35,6 +35,7 @@ use App\Http\Controllers\WardrobeController;
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/wardrobe', [WardrobeController::class, 'index']);
+    Route::get('/available-clothing', [WardrobeController::class, 'availableClothing']);
     Route::post('/wardrobe', [WardrobeController::class, 'addToWardrobe']);
     Route::delete('/wardrobe/{id}', [WardrobeController::class, 'removeFromWardrobe']);
 

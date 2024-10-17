@@ -34,10 +34,21 @@ class WardrobeController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function availableClothing() // TODO: sort by clothes that are not already in wardrobe
+    public function availableClothing()
     {
-        // Retrieve all clothing items from the database
-        $clothingItems = Clothing::all();
+        $wardrobe = Wardrobe::where('user_id', auth()->id())->first();
+
+        if ($wardrobe) {
+            // Get clothing items not already in the wardrobe
+            $clothingItems = Clothing::whereNotIn('id', function ($query) use ($wardrobe) {
+                $query->select('clothing_id')
+                    ->from('wardrobe_items')
+                    ->where('wardrobe_id', $wardrobe->id);
+            })->get();
+        } else {
+            // If wardrobe is empty, show all clothing items
+            $clothingItems = Clothing::all();
+        }
 
         return response()->json($clothingItems, 200);
     }
