@@ -116,7 +116,10 @@ class ClothingTableSeeder extends Seeder
                 foreach ($temperatureRanges as $temperature_range_id) {
                     foreach ($materials as $material_id) {
                         // Combine base and unusual colors
-                        $colors = array_merge($colorMapping['base'], array_slice($colorMapping['unusual'], 0, 1)); // Take 1 unusual colors for variety
+                        $colors = array_merge(
+                            $colorMapping['base'],
+                            [ $colorMapping['unusual'][array_rand($colorMapping['unusual'])] ] // Take 1 random unusual color for variety
+                        );
 
                         foreach ($colors as $color) {
                             \App\Models\Clothing::create([
