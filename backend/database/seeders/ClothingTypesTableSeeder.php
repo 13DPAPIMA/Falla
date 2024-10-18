@@ -16,7 +16,13 @@ class ClothingTypesTableSeeder extends Seeder
             ['type' => 'Jacket', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
             ['type' => 'Dress', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
             ['type' => 'Sweater', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            // Add more clothing types as needed
+            ['type' => 'Shorts', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['type' => 'Skirt', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['type' => 'Coat', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['type' => 'Hoodie', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['type' => 'Tank Top', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['type' => 'Shirt', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
+            ['type' => 'Leggings', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
         ]);
     }
 }
