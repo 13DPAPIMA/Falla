@@ -1,6 +1,17 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useToast } from '@/components/ui/toast/use-toast';
+import { Input } from "@/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
 import api from '@/api.ts';
 import router from '@/router.ts';
 import { Button } from "@/components/ui/button";
@@ -13,13 +24,20 @@ const updatedGender = ref<string>('');
 const updatedPassword = ref<string>('');  // Password field
 const passwordConfirmation = ref<string>('');  // Password confirmation field
 
+// Track which fields are updated
+const fieldsUpdated = ref({
+  email: false,
+  gender: false,
+  password: false,
+});
+
 // Fetch user data when the component mounts
 const fetchUserData = async () => {
   try {
     const token = localStorage.getItem('token');
     if (!token) {
       router.push('api/login');
-      return; // Exit function early if token is not available
+      return;
     }
 
     const response = await api.get('api/user', {
@@ -31,9 +49,8 @@ const fetchUserData = async () => {
     userData.value = response.data;
     updatedEmail.value = userData.value.email;
     updatedGender.value = userData.value.gender;
-
   } catch (error) {
-    console.error(error); // Log error for debugging
+    console.error(error); 
     toast({
       title: 'Error fetching user data',
       description: 'Unable to load user data. Please try again later.',
@@ -41,34 +58,7 @@ const fetchUserData = async () => {
   }
 };
 
-// Logout function
-const logout = async () => {
-  try {
-    const token = localStorage.getItem('token');
-
-    await api.post('api/logout', {}, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    localStorage.removeItem('token');
-    router.push('/');
-
-    toast({
-      title: 'Logged out',
-      description: 'You have been successfully logged out.',
-    });
-  } catch (error) {
-    console.error(error); // Log error for debugging
-    toast({
-      title: 'Error logging out',
-      description: 'Unable to log out. Please try again later.',
-    });
-  }
-};
-
-// Update user data function
+// Update user data function (partial updates)
 const updateUserData = async () => {
   try {
     const token = localStorage.getItem('token');
@@ -77,21 +67,37 @@ const updateUserData = async () => {
       return;
     }
 
-    // Check if passwords match before sending the request
-    if (updatedPassword.value && updatedPassword.value !== passwordConfirmation.value) {
+    const updatedFields: Record<string, any> = {};
+
+    if (fieldsUpdated.value.email) {
+      updatedFields.email = updatedEmail.value;
+    }
+    if (fieldsUpdated.value.gender) {
+      updatedFields.gender = updatedGender.value;
+    }
+    if (fieldsUpdated.value.password) {
+      // Check if passwords match before sending the request
+      if (updatedPassword.value !== passwordConfirmation.value) {
+        toast({
+          title: 'Error',
+          description: 'Passwords do not match. Please try again.',
+        });
+        return;
+      }
+      updatedFields.password = updatedPassword.value;
+      updatedFields.password_confirmation = passwordConfirmation.value;
+    }
+
+    // If no fields have been updated, prevent submission
+    if (Object.keys(updatedFields).length === 0) {
       toast({
-        title: 'Error',
-        description: 'Passwords do not match. Please try again.',
+        title: 'No changes',
+        description: 'No fields have been updated.',
       });
       return;
     }
 
-    const response = await api.put('api/user', {
-      email: updatedEmail.value,
-      gender: updatedGender.value,
-      password: updatedPassword.value,  // Include password in the request
-      password_confirmation: passwordConfirmation.value,  // Include password confirmation in the request
-    }, {
+    const response = await api.put('api/user', updatedFields, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -103,6 +109,13 @@ const updateUserData = async () => {
       title: 'Profile updated',
       description: 'Your profile has been successfully updated.',
     });
+
+    // Reset the tracking object after a successful update
+    fieldsUpdated.value = {
+      email: false,
+      gender: false,
+      password: false,
+    };
 
   } catch (error) {
     console.error(error.response.data); 
@@ -121,74 +134,95 @@ const updateUserData = async () => {
   }
 };
 
-
 onMounted(async () => {
   await fetchUserData();
 });
 </script>
 
+
 <template>
-  <div v-if="userData" class="text-center">
+  <div v-if="userData" class="">
     <div class="my-10 bg-white shadow-xl rounded-xl p-6 mt-10 mx-auto max-w-lg">
       <h1 class="text-3xl font-bold mb-4">Profile</h1>
       <p class="text-gray-500 mb-6">On this page, your profile data is displayed</p>
       <hr />
+  
+      <form class="space-y-4" @submit.prevent="updateUserData">  
+        <FormField name="email">
+          <FormItem>
+            <FormLabel>Email</FormLabel>
+            <FormControl>
+              <Input 
+                name="email"
+                v-model="updatedEmail"
+                @input="fieldsUpdated.email = true"
+                type="email"
+              />
+            </FormControl>
+            <FormDescription>This is your email.</FormDescription>
+            <FormMessage />
+          </FormItem>
+        </FormField>
 
-      <!-- Email Input -->
-      <div class="my-3 bg-gray-100 p-3">
-        <label for="email">Your Email</label>
-        <input 
-          id="email"
-          v-model="updatedEmail"
-          type="email"
-          class="block w-full mt-2 border-gray-300 rounded-md p-2"
-        />
-      </div>
+        <!-- Gender Dropdown -->
+        <FormField name="gender">
+          <FormItem>
+            <FormLabel>Gender</FormLabel>
+            <FormControl>
+              <select v-model="updatedGender" @change="fieldsUpdated.gender = true">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </FormControl>
+            <FormDescription>Select your gender.</FormDescription>
+            <FormMessage />
+          </FormItem>
+        </FormField>
 
-      <!-- Gender Dropdown -->
-      <div class="bg-gray-100 p-3 mt-4">
-        <label for="gender">Your Gender</label>
-        <select 
-          id="gender" 
-          v-model="updatedGender"
-          class="block w-full mt-2 border-gray-300 rounded-md p-2"
-        >
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-        </select>
-      </div>
+        <!-- Password Input -->
+        <FormField name="password">
+          <FormItem>
+            <FormLabel>New Password</FormLabel>
+            <FormControl>
+              <Input
+                v-model="updatedPassword"
+                @input="fieldsUpdated.password = true"
+                type="password"
+              />
+            </FormControl>
+            <FormDescription>
+              Enter a new password if you want to change it.
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        </FormField>
+      
+        <FormField name="passwordConfirmation">
+          <FormItem>
+            <FormLabel>Confirm Password</FormLabel>
+            <FormControl>
+              <Input
+                v-model="passwordConfirmation"
+                @input="fieldsUpdated.password = true"
+                type="password"
+              />
+            </FormControl>
+            <FormDescription>
+              Confirm your new password.
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        </FormField>
 
-      <!-- Password Input -->
-      <div class="my-3 bg-gray-100 p-3">
-        <label for="password">New Password</label>
-        <input 
-          id="password"
-          v-model="updatedPassword"
-          type="password"
-          class="block w-full mt-2 border-gray-300 rounded-md p-2"
-        />
+        <!-- Update Button -->
+      
+      <div class="flex justify-end">
+      <Button class="mt-6" type="submit">Update Profile</Button>
+      <Button variant="destructive" class="ml-auto mt-6" @click="logout">Logout</Button>
       </div>
-
-      <!-- Password Confirmation Input -->
-      <div class="my-3 bg-gray-100 p-3">
-        <label for="password-confirm">Confirm Password</label>
-        <input 
-          id="password-confirm"
-          v-model="passwordConfirmation"
-          type="password"
-          class="block w-full mt-2 border-gray-300 rounded-md p-2"
-        />
-      </div>
-
-      <!-- Update Button -->
-      <div>
-        <Button class="mt-6" @click="updateUserData">Update Profile</Button>
-      </div>
+      </form>
 
       <!-- Logout Button -->
-      <div>
-        <Button variant="destructive" class="mt-6" @click="logout">Logout</Button>
-      </div>
     </div>
   </div>
 
@@ -196,3 +230,4 @@ onMounted(async () => {
     <p>Loading user data...</p>
   </div>
 </template>
+
