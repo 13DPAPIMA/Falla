@@ -91,13 +91,20 @@ class ClothingTableSeeder extends Seeder
             12 => false, // Leggings: not water-resistant
         ];
 
-        // Base and unusual colors mapping
-        $colorMapping = [
-            'base' => ['black', 'white', 'gray'],
-            'unusual' => [
-                'maroon', 'blue', 'green', 'yellow', 'purple', 'pink', 'orange',
-                'turquoise', 'burgundy', 'lime', 'teal', 'navy', 'lavender'
-            ]
+        // Clothing type to color mapping
+        $colorMappingByType = [
+            1 => ['black', 'white', 'gray'], // T-Shirt
+            2 => ['blue', 'black', 'gray'], // Jeans
+            3 => ['navy', 'black', 'gray'], // Jacket
+            4 => ['red', 'pink', 'green'], // Dress
+            5 => ['beige', 'gray', 'blue', 'maroon'], // Sweater
+            6 => ['black', 'blue', 'gray'], // Shorts
+            7 => ['black', 'gray', 'red'], // Skirt
+            8 => ['black', 'brown', 'gray'], // Coat
+            9 => ['blue', 'green', 'gray'], // Hoodie
+            10 => ['white', 'black'], // Tank Top
+            11 => ['white', 'blue', 'green'], // Shirt
+            12 => ['black', 'gray', 'blue'], // Leggings
         ];
 
         // Generate unique combinations
@@ -108,19 +115,14 @@ class ClothingTableSeeder extends Seeder
             $styles = $styleMapping[$type_id];
 
             foreach ($styles as $style_id) {
-                // Get valid temperature ranges and materials for the current clothing type
+                // Get valid temperature ranges, materials, water resistance and color for the current clothing type
                 $temperatureRanges = $temperatureRangeMapping[$type_id];
                 $materials = $materialMapping[$type_id];
                 $waterResistant = $waterResistantMapping[$type_id];
+                $colors = $colorMappingByType[$type_id];
 
                 foreach ($temperatureRanges as $temperature_range_id) {
                     foreach ($materials as $material_id) {
-                        // Combine base and unusual colors
-                        $colors = array_merge(
-                            $colorMapping['base'],
-                            [ $colorMapping['unusual'][array_rand($colorMapping['unusual'])] ] // Take 1 random unusual color for variety
-                        );
-
                         foreach ($colors as $color) {
                             \App\Models\Clothing::create([
                                 'style_id' => $style_id,
