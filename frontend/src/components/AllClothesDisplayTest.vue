@@ -13,7 +13,11 @@
             <p class="text-sm text-gray-600 mb-2">Material: {{ item.material.material }}</p>
             <div class="flex items-center justify-between">
               <div class="flex items-center">
-                <div class="w-6 h-6 rounded-full mr-2" :style="{ backgroundColor: item.color }"></div>
+                <div
+                    class="w-6 h-6 rounded-full mr-2"
+                    :style="{ backgroundColor: item.color }"
+                    :class="{ 'border': item.color === 'white' }"
+                ></div>
                 <span class="text-sm capitalize text-gray-700">{{ item.color }}</span>
               </div>
               <div v-if="item.water_resistant" class="flex items-center text-blue-500">
