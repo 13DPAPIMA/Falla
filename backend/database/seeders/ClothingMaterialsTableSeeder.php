@@ -13,8 +13,6 @@ class ClothingMaterialsTableSeeder extends Seeder
         DB::table('clothing_materials')->insert([
             ['material' => 'Cotton', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
             ['material' => 'Wool', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['material' => 'Polyester', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
-            ['material' => 'Leather', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
             ['material' => 'Denim', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
             // Add more materials as needed
         ]);
