@@ -30,6 +30,7 @@ const onSubmit = handleSubmit(async (formValues) => {
     await getToken();
     const response = await api.post('/api/login', formValues);
     localStorage.setItem('token', response.data.token);
+    localStorage.setItem('role', response.data.user.role);
     router.push('/');
   } catch (error) {
     toast({
