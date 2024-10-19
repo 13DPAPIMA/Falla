@@ -31,6 +31,9 @@ const fieldsUpdated = ref({
   password: false,
 });
 
+// Password visibility control
+const isPasswordFieldVisible = ref(false);
+
 // Fetch user data when the component mounts
 const fetchUserData = async () => {
   try {
@@ -139,47 +142,50 @@ onMounted(async () => {
 });
 </script>
 
-
 <template>
-  <div v-if="userData" class="">
-    <div class="my-10 bg-white shadow-xl rounded-xl p-6 mt-10 mx-auto max-w-lg">
-      <h1 class="text-3xl font-bold mb-4">Profile</h1>
-      <p class="text-gray-500 mb-6">On this page, your profile data is displayed</p>
-      <hr />
-  
-      <form class="space-y-4" @submit.prevent="updateUserData">  
-        <FormField name="email">
-          <FormItem>
-            <FormLabel>Email</FormLabel>
-            <FormControl>
-              <Input 
-                name="email"
-                v-model="updatedEmail"
-                @input="fieldsUpdated.email = true"
-                type="email"
-              />
-            </FormControl>
-            <FormDescription>This is your email.</FormDescription>
-            <FormMessage />
-          </FormItem>
-        </FormField>
+  <div v-if="userData" class="my-10 bg-white shadow-xl rounded-xl p-6 mt-10 mx-auto max-w-lg">
+    <h1 class="text-3xl font-bold mb-4">Profile</h1>
+    <p class="text-gray-500 mb-6">On this page, your profile data is displayed</p>
+    <hr />
 
-        <!-- Gender Dropdown -->
-        <FormField name="gender">
-          <FormItem>
-            <FormLabel>Gender</FormLabel>
-            <FormControl>
-              <select v-model="updatedGender" @change="fieldsUpdated.gender = true">
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-              </select>
-            </FormControl>
-            <FormDescription>Select your gender.</FormDescription>
-            <FormMessage />
-          </FormItem>
-        </FormField>
+    <form class="space-y-4" @submit.prevent="updateUserData">  
+      <FormField name="email">
+        <FormItem>
+          <FormLabel>Email</FormLabel>
+          <FormControl>
+            <Input 
+              name="email"
+              v-model="updatedEmail"
+              @input="fieldsUpdated.email = true"
+              type="email"
+            />
+          </FormControl>
+          <FormDescription>This is your email.</FormDescription>
+          <FormMessage />
+        </FormItem>
+      </FormField>
 
-        <!-- Password Input -->
+      <!-- Gender Dropdown -->
+      <FormField name="gender">
+        <FormItem>
+          <FormLabel>Gender</FormLabel>
+          <FormControl>
+            <select v-model="updatedGender" @change="fieldsUpdated.gender = true">
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </FormControl>
+          <FormDescription>Select your gender.</FormDescription>
+          <FormMessage />
+        </FormItem>
+      </FormField>
+
+      <Button @click="isPasswordFieldVisible = !isPasswordFieldVisible" type="button">
+        {{ isPasswordFieldVisible ? 'Hide Password Fields' : 'Show Password Fields' }}
+      </Button>
+
+      <!-- Password Input -->
+      <div v-if="isPasswordFieldVisible">
         <FormField name="password">
           <FormItem>
             <FormLabel>New Password</FormLabel>
@@ -213,21 +219,17 @@ onMounted(async () => {
             <FormMessage />
           </FormItem>
         </FormField>
-
-        <!-- Update Button -->
-      
-      <div class="flex justify-end">
-      <Button class="mt-6" type="submit">Update Profile</Button>
-      <Button variant="destructive" class="ml-auto mt-6" @click="logout">Logout</Button>
       </div>
-      </form>
 
-      <!-- Logout Button -->
-    </div>
+      <!-- Update Button -->
+      <div class="flex justify-end">
+        <Button class="mt-6" type="submit">Update Profile</Button>
+        <Button variant="destructive" class="ml-auto mt-6" @click="logout">Logout</Button>
+      </div>
+    </form>
   </div>
 
   <div v-else class="text-center mt-20">
     <p>Loading user data...</p>
   </div>
 </template>
-
