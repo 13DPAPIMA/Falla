@@ -56,7 +56,7 @@ const fetchWeather = async () => {
 onMounted(fetchWeather);
 
 const navigateToOtherPage = () => {
-  router.push('/weather'); // Replace with your target route
+  router.push('/home'); // Replace with your target route
 };
 </script>
 
