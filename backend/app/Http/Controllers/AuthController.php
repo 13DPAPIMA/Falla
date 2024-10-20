@@ -54,7 +54,7 @@ class AuthController extends Controller
         $user = $request->user();
 
         $validatedData = $request->validate([
-            'email' => 'sometimes|email|unique:users,email,' . $user->id,
+            'email' => 'min:8|max:50|sometimes|email|unique:users,email,' . $user->id,
             'password' => 'sometimes|string|min:8|confirmed',
             'gender' => 'sometimes|in:Male,Female',
         ]);
@@ -68,6 +68,21 @@ class AuthController extends Controller
         $user->update($dataToUpdate);
 
         return $user;
+    }
+
+    public function verifyPassword(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        $user = $request->user();
+
+        if (Hash::check($request->password, $user->password)) {
+            return response()->json(['verified' => true]);
+        }
+
+        return response()->json(['verified' => false], 401);
     }
 
     public function logout(Request $request)

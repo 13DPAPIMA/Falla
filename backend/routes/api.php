@@ -15,6 +15,7 @@ Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('logout', [AuthController::class, 'logout']);
 Route::middleware('auth:sanctum')->put('user', [AuthController::class, 'update']);
+Route::middleware('auth:sanctum')->post('verify-password', [AuthController::class, 'verifyPassword']);
 
 
 // weather and suggestion routes
@@ -26,7 +27,6 @@ Route::get('/weather', [WeatherController::class, 'getWeather']);
 Route::post('/clothing-suggestions', [ClothingSuggestionsController::class, 'getClothingSuggestions']);
 
 Route::post('/upload-photo', [App\Http\Controllers\PhotoController::class, 'uploadPhoto']);
-
 
 // wardrobe routes
 use App\Http\Controllers\ClothingController;

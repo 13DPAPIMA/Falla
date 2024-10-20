@@ -21,8 +21,8 @@
           <div class="weather-description">{{ forecast.weather[0].description }}</div>
         </div>
         <div class="temperature-info">
-          <div>Temp: {{ forecast.main.temp }}°C (Feels like {{ forecast.main.feels_like }}°C)</div>
-          <div>Max: {{ forecast.main.temp_max }}°C | Min: {{ forecast.main.temp_min }}°C</div>
+          <div>Temp: {{ Math.round(forecast.main.temp) }}°C (Feels like {{ Math.round(forecast.main.feels_like) }}°C)</div>
+          <div>Max: {{ Math.round(forecast.main.temp_max) }}°C | Min: {{ Math.round(forecast.main.temp_min) }}°C</div>
         </div>
         <div class="additional-info">
           <div>Humidity: {{ forecast.main.humidity }}%</div>
