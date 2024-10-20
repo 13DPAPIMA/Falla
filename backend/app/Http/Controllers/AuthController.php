@@ -70,6 +70,21 @@ class AuthController extends Controller
         return $user;
     }
 
+    public function verifyPassword(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        $user = $request->user();
+
+        if (Hash::check($request->password, $user->password)) {
+            return response()->json(['verified' => true]);
+        }
+
+        return response()->json(['verified' => false], 401);
+    }
+
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
