@@ -1,52 +1,61 @@
 <template>
-  <div class="weather-wrapper">
-    <div class="city-input">
-      <Input v-model="city" type="text" placeholder="Enter city" />
-      <Button class="ml-6" @click="fetchWeather">Get Weather</Button>
-    </div>
+  <div class="min-h-screen p-6">
 
-    <div v-if="errorMessage" class="error-message">
-      {{ errorMessage }}
-    </div>
+    <!-- Header -->
 
-    <div v-if="todayForecast && todayForecast.length" class="weather-container">
-      <h2 class="city-name">{{ weather.city.name }} Today's Weather</h2>
-
-      <Separator />
-
-      <div v-for="(forecast, index) in todayForecast" :key="index" class="forecast-item">
-        <!-- Информация о погоде -->
-        <div class="time-info">
-          <div class="formatted-time">{{ formatTime(forecast.dt_txt) }}</div>
-          <div class="weather-description">{{ forecast.weather[0].description }}</div>
+    <main class="max-w-3xl mx-auto p-6">
+      <div class="mb-6">
+        <div class="flex space-x-4">
+          <Input v-model="city" type="text" placeholder="Enter city" class="flex-grow" />
+          <Button @click="fetchWeather" :disabled="isLoading">
+            <Loader v-if="isLoading" class="mr-2 h-4 w-4 animate-spin" />
+            Get Weather
+          </Button>
         </div>
-        <div class="temperature-info">
-          <div>Temp: {{ Math.round(forecast.main.temp) }}°C (Feels like {{ Math.round(forecast.main.feels_like) }}°C)</div>
-          <div>Max: {{ Math.round(forecast.main.temp_max) }}°C | Min: {{ Math.round(forecast.main.temp_min) }}°C</div>
-        </div>
-        <div class="additional-info">
-          <div>Humidity: {{ forecast.main.humidity }}%</div>
-          <div>Wind: {{ forecast.wind.speed }} km/h, gusts up to {{ forecast.wind.gust }} km/h</div>
-          <div>Cloudiness: {{ forecast.clouds.all }}%</div>
-          <div>Rain: {{ forecast.rain?.['3h'] || 0 }} mm</div>
-        </div>
-        <img
-            v-if="forecast.weather[0]?.icon"
-            :src="`https://openweathermap.org/img/w/${forecast.weather[0].icon}.png`"
-            class="weather-icon"
-            alt="Weather Icon"
-        />
+        <p v-if="errorMessage" class="mt-2 text-red-600">{{ errorMessage }}</p>
       </div>
-    </div>
 
-    <div v-else>
-      <div class="loading-message">No weather data for today.</div>
-    </div>
+      <div v-if="weather" class="space-y-8">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-semibold text-gray-800">{{ weather.city.name }}, {{ weather.city.country }}</h2>
+            <p class="text-gray-600">{{ formatDate(todayForecast[0].dt_txt) }}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-4xl font-bold text-gray-800">{{ Math.round(todayForecast[0].main.temp) }}°C</p>
+            <p class="text-gray-600">Feels like {{ Math.round(todayForecast[0].main.feels_like) }}°C</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <CloudRainWind class="mx-auto h-8 w-8 text-blue-500" />
+            <p class="mt-1 font-medium">{{ todayForecast[0].main.humidity }}%</p>
+            <p class="text-sm text-gray-600">Humidity</p>
+          </div>
+          <div>
+            <Wind class="mx-auto h-8 w-8 text-blue-500" />
+            <p class="mt-1 font-medium">{{ todayForecast[0].wind.speed }} m/s</p>
+            <p class="text-sm text-gray-600">Wind Speed</p>
+          </div>
+          <div>
+            <Thermometer class="mx-auto h-8 w-8 text-blue-500" />
+            <p class="mt-1 font-medium">{{ Math.round(todayForecast[0].main.feels_like) }}°C</p>
+            <p class="text-sm text-gray-600">Feels Like</p>
+          </div>
+        </div>
+      </div>
+
+      <div v-else-if="!isLoading" class="text-center text-gray-600">
+        <Cloud class="mx-auto h-16 w-16 text-gray-400" />
+        <p class="mt-2">Enter a city to get weather information</p>
+      </div>
+
+      <Separator class="my-6" />
+
+      <ClothingSuggestions v-if="weather" :weather="weather" />
+    </main>
   </div>
-
-  <Separator />
-
-  <ClothingSuggestions v-if="weather" :weather="weather" />
 </template>
 
 <script setup lang="ts">
@@ -56,6 +65,7 @@ import { Separator } from '@/components/ui/separator'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import ClothingSuggestions from './ClothingSuggestions.vue'
+import { Cloud, CloudRainWind, Wind, Thermometer, Loader } from 'lucide-vue-next'
 
 interface WeatherData {
   city: {
@@ -94,6 +104,11 @@ const todayForecast = computed(() => {
   })
 })
 
+const formatDate = (dateTime: string) => {
+  const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+  return new Date(dateTime).toLocaleDateString(undefined, options)
+}
+
 const fetchWeather = async () => {
   const cityToFetch = city.value || 'Riga'
   isLoading.value = true
@@ -123,11 +138,6 @@ const fetchWeather = async () => {
   }
 }
 
-const formatTime = (dateTime: string) => {
-  const options: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' }
-  return new Date(dateTime).toLocaleTimeString(undefined, options)
-}
-
 onMounted(() => {
   fetchWeather()
 })
@@ -141,115 +151,9 @@ img {
   border: 1px solid #ccc;
 }
 
-.clothing-item {
-  border: 1px solid #ccc;
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
 .clothing-item img {
   width: 150px;
   height: auto;
-}
-
-.weather-container {
-  border: 1px solid #ccc;
-  padding: 20px;
-  margin-top: 20px;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-  text-align: center;
-}
-
-.city-input {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-.error-message {
-  color: red;
-  font-weight: bold;
-}
-
-.loading {
-  font-size: 18px;
-  color: #007bff;
-}
-
-.weather-wrapper {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.error-message {
-  color: #d9534f;
-  font-weight: bold;
-  margin-bottom: 20px;
-}
-
-.weather-container {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 20px;
-  background-color: #f9f9f9;
-}
-
-.city-name {
-  font-size: 24px;
-  color: #333;
-  margin-bottom: 10px;
-}
-
-.weather-details {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.time-info {
-  text-align: center;
-}
-
-.formatted-time, .formatted-date {
-  font-size: 18px;
-  color: #666;
-}
-
-.weather-description {
-  font-size: 20px;
-  color: #333;
-  margin: 10px 0;
-}
-
-.weather-forecast {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.weather-icon {
-  width: 100px;
-  height: 100px;
-  margin: 10px 0;
-}
-
-.temperature-info {
-  font-size: 18px;
-  color: #333;
-}
-
-.additional-info {
-  font-size: 16px;
-  color: #666;
-  margin-top: 20px;
-}
-
-.loading-message {
-  text-align: center;
-  font-size: 18px;
-  color: #666;
 }
 
 </style>
