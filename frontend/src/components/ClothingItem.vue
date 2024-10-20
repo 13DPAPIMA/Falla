@@ -38,13 +38,13 @@
 <script setup lang="ts">
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Droplet, Shirt, Pants, Jacket, Dress, Sweater, Shorts, Skirt, Umbrella, Hoodie, Tank, Leggings } from 'lucide-vue-next'
+import { Droplet, Shirt } from 'lucide-vue-next'
 
 interface ClothingItem {
   id: number
-  type: { type: string }
-  style: { style: string }
-  material: { material: string }
+  type: { id: number; type: string }
+  style: { id: number; style: string }
+  material: { id: number; material: string }
   gender: string
   color: string
   water_resistant: number
@@ -58,20 +58,11 @@ const props = defineProps<{
 const emit = defineEmits(['add', 'remove'])
 
 function getClothingIcon(type: string) {
-  const iconMap = {
+  const iconMap: { [key: string]: any } = {
     'T-Shirt': Shirt,
-    'Jeans': Pants,
-    'Jacket': Jacket,
-    'Dress': Dress,
-    'Sweater': Sweater,
-    'Shorts': Shorts,
-    'Skirt': Skirt,
-    'Coat': Umbrella,
-    'Hoodie': Hoodie,
-    'Tank Top': Tank,
-    'Shirt': Shirt,
-    'Leggings': Leggings
+    // TODO: Add more mappings here if new relevant icons become available
   }
-  return iconMap[type as keyof typeof iconMap] || Shirt
+
+  return iconMap[type] || Shirt
 }
 </script>

@@ -1,35 +1,57 @@
 <template>
   <div class="container mx-auto p-4">
-    <h1 class="text-3xl font-bold mb-6">My Wardrobe</h1>
+    <h1 class="text-3xl font-bold mb-6 text-primary">My Wardrobe</h1>
 
     <Tabs default-value="wardrobe" class="w-full mb-6">
-      <TabsList>
-        <TabsTrigger value="wardrobe">My Wardrobe</TabsTrigger>
-        <TabsTrigger value="available">Available Clothing</TabsTrigger>
+      <TabsList class="w-full mb-6">
+        <TabsTrigger value="wardrobe" class="flex-1">My Wardrobe</TabsTrigger>
+        <TabsTrigger value="available" class="flex-1">Available Clothing</TabsTrigger>
       </TabsList>
       <TabsContent value="wardrobe">
-        <div v-if="wardrobe.length === 0" class="text-center py-8">
-          <p class="text-xl text-gray-500">Your wardrobe is empty</p>
-        </div>
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <TransitionGroup
+            name="list"
+            tag="div"
+            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+        >
+          <div v-if="wardrobe.length === 0" key="empty" class="col-span-full">
+            <EmptyState
+                icon="Hanger"
+                title="Your wardrobe is empty"
+                description="Add some clothes to get started!"
+            />
+          </div>
           <ClothingItem
+              v-else
               v-for="item in wardrobe"
               :key="item.id"
-              :item="item"
-              @remove="removeFromWardrobe"
+              :item="item.clothing"
+              :is-available="false"
+              @remove="removeFromWardrobe(item.clothing.id)"
           />
-        </div>
+        </TransitionGroup>
       </TabsContent>
       <TabsContent value="available">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <TransitionGroup
+            name="list"
+            tag="div"
+            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+        >
+          <div v-if="availableClothing.length === 0" key="empty" class="col-span-full">
+            <EmptyState
+                icon="ShoppingBag"
+                title="No available clothing"
+                description="Check back later for new arrivals!"
+            />
+          </div>
           <ClothingItem
+              v-else
               v-for="item in availableClothing"
               :key="item.id"
               :item="item"
               :is-available="true"
-              @add="addToWardrobe"
+              @add="addToWardrobe(item.id)"
           />
-        </div>
+        </TransitionGroup>
       </TabsContent>
     </Tabs>
 
@@ -45,10 +67,37 @@ import { ref, onMounted } from 'vue'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import ClothingItem from './ClothingItem.vue'
+import EmptyState from './EmptyState.vue'
 import api from '@/api'
 
-const wardrobe = ref([])
-const availableClothing = ref([])
+interface WardrobeItem {
+  id: number
+  wardrobe_id: number
+  clothing_id: number
+  created_at: string
+  updated_at: string
+  clothing: ClothingItem
+}
+
+interface ClothingItem {
+  id: number
+  style_id: number
+  photo_id: number | null
+  type_id: number
+  temperature_range_id: number
+  material_id: number
+  gender: string
+  color: string
+  water_resistant: number
+  created_at: string
+  updated_at: string
+  type: { id: number; type: string }
+  material: { id: number; material: string }
+  style: { id: number; style: string }
+}
+
+const wardrobe = ref<WardrobeItem[]>([])
+const availableClothing = ref<ClothingItem[]>([])
 const error = ref<string | null>(null)
 
 onMounted(async () => {
@@ -103,9 +152,9 @@ async function addToWardrobe(clothingId: number) {
   }
 }
 
-async function removeFromWardrobe(wardrobeId: number) {
+async function removeFromWardrobe(itemId: number) {
   try {
-    await removeClothingFromWardrobe(wardrobeId)
+    await removeClothingFromWardrobe(itemId)
     await fetchWardrobe()
     await fetchAvailableClothing()
   } catch (err: any) {
@@ -114,3 +163,7 @@ async function removeFromWardrobe(wardrobeId: number) {
   }
 }
 </script>
+
+<style scoped>
+
+</style>
