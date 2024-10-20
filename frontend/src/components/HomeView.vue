@@ -60,7 +60,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import api from '@/api.ts'
+import api from '@/api'
 import { Separator } from '@/components/ui/separator'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'

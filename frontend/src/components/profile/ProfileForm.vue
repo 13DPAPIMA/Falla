@@ -43,12 +43,7 @@ const isChangingPassword = ref(false)
 
 const fetchUserData = async () => {
   try {
-    const token = localStorage.getItem('token')
-    const response = await api.get('api/user', {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
+    const response = await api.get('api/user')
     userData.value = response.data
   } catch (error) {
     localStorage.removeItem('token');
@@ -64,12 +59,7 @@ const fetchUserData = async () => {
 
 const verifyPassword = async (password: string): Promise<boolean> => {
   try {
-    const token = localStorage.getItem('token')
-    const response = await api.post('api/verify-password', { password }, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
+    const response = await api.post('api/verify-password', { password })
     return response.data.verified
   } catch (error) {
     console.error('Error verifying password:', error)
@@ -79,7 +69,6 @@ const verifyPassword = async (password: string): Promise<boolean> => {
 
 const onSubmit = handleSubmit(async (formValues) => {
   try {
-    const token = localStorage.getItem('token')
     const updateData: any = {}
 
     if ((isChangingEmail.value && formValues.email && formValues.currentPassword) ||
@@ -117,11 +106,7 @@ const onSubmit = handleSubmit(async (formValues) => {
     }
 
     if (Object.keys(updateData).length > 0) {
-      await api.put('api/user', updateData, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
+      await api.put('api/user', updateData)
 
       toast({
         title: 'Profile Updated',

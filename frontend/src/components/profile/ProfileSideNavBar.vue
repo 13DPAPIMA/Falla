@@ -7,14 +7,8 @@ import { Button } from "@/components/ui/button"
 const { toast } = useToast()
 
 const logout = async () => {
-  const token = localStorage.getItem('token');
-
   try {
-    await api.post('/api/logout', {}, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
+    await api.post('/api/logout', {});
   } catch (error) {
     console.error(error);
   }
