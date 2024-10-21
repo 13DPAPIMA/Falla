@@ -9,7 +9,6 @@
       </TabsList>
       <TabsContent value="wardrobe">
         <FilterBar
-            :types="allTypes"
             :styles="allStyles"
             @update:filters="updateFilters"
         />
@@ -37,7 +36,6 @@
       </TabsContent>
       <TabsContent value="available">
         <FilterBar
-            :types="allTypes"
             :styles="allStyles"
             @update:filters="updateFilters"
         />
@@ -113,15 +111,8 @@ const error = ref<string | null>(null)
 const activeTab = ref('wardrobe')
 
 const filters = ref({
-  type: '',
-  style: '',
-})
-
-const allTypes = computed(() => {
-  const types = new Set<string>()
-  wardrobe.value.forEach(item => types.add(item.clothing.type.type))
-  availableClothing.value.forEach(item => types.add(item.type.type))
-  return Array.from(types)
+  style: null as string | null,
+  search: ''
 })
 
 const allStyles = computed(() => {
@@ -133,17 +124,22 @@ const allStyles = computed(() => {
 
 const filteredWardrobe = computed(() => {
   return wardrobe.value.filter(item =>
-      (!filters.value.type || item.clothing.type.type === filters.value.type) &&
-      (!filters.value.style || item.clothing.style.style === filters.value.style)
+      (!filters.value.style || item.clothing.style.style === filters.value.style) &&
+      (!filters.value.search || itemMatchesSearch(item.clothing, filters.value.search))
   )
 })
 
 const filteredAvailableClothing = computed(() => {
   return availableClothing.value.filter(item =>
-      (!filters.value.type || item.type.type === filters.value.type) &&
-      (!filters.value.style || item.style.style === filters.value.style)
+      (!filters.value.style || item.style.style === filters.value.style) &&
+      (!filters.value.search || itemMatchesSearch(item, filters.value.search))
   )
 })
+
+function itemMatchesSearch(item: ClothingItem, search: string): boolean {
+  const searchLower = search.toLowerCase()
+  return item.type.type.toLowerCase().includes(searchLower)
+}
 
 onMounted(async () => {
   await fetchWardrobe()
@@ -208,7 +204,7 @@ async function removeFromWardrobe(itemId: number) {
   }
 }
 
-function updateFilters(newFilters: { type: string; style: string }) {
+function updateFilters(newFilters: { style: string | null; search: string }) {
   filters.value = newFilters
 }
 </script>
