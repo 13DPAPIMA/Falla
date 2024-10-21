@@ -4,8 +4,8 @@
 
     <Tabs v-model="activeTab" class="w-full mb-6">
       <TabsList class="w-full mb-6">
-        <TabsTrigger value="wardrobe" class="flex-1">My Wardrobe</TabsTrigger>
-        <TabsTrigger value="available" class="flex-1">Available Clothing</TabsTrigger>
+        <TabsTrigger value="wardrobe" class="flex-1 text-xl">My Wardrobe</TabsTrigger>
+        <TabsTrigger value="available" class="flex-1 text-xl">Available Clothing</TabsTrigger>
       </TabsList>
       <TabsContent value="wardrobe">
         <FilterBar
