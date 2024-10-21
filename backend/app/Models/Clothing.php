@@ -17,6 +17,7 @@ class Clothing extends Model
         'material_id',
         'gender',
         'color',
+        'layer',
         'water_resistant',
     ];
 

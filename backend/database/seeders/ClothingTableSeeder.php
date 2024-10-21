@@ -15,7 +15,7 @@ class ClothingTableSeeder extends Seeder
         $genderMapping = [
             1 => 'neutral', // T-Shirt
             2 => 'neutral', // Jeans
-            3 => 'male',    // Jacket
+            3 => 'neutral', // Jacket
             4 => 'female',  // Dress
             5 => 'neutral', // Sweater
             6 => 'neutral', // Shorts
@@ -29,18 +29,18 @@ class ClothingTableSeeder extends Seeder
 
         // Clothing type to temperature range mapping
         $temperatureRangeMapping = [
-            1 => [3, 4], // T-Shirt: suitable for 11°C - 30°C
-            2 => [2, 3], // Jeans: suitable for 0°C - 20°C
-            3 => [1, 2], // Jacket: suitable for Below 0°C to 10°C
-            4 => [3, 4], // Dress: suitable for 11°C - 30°C
-            5 => [1, 2, 3], // Sweater: suitable for Below 0°C to 20°C
-            6 => [3, 4], // Shorts: suitable for 11°C - 30°C
-            7 => [3, 4], // Skirt: suitable for 11°C - 30°C
-            8 => [1, 2], // Coat: suitable for Below 0°C to 10°C
-            9 => [1, 2, 3], // Hoodie: suitable for Below 0°C to 20°C
-            10 => [3, 4], // Tank Top: suitable for 11°C - 30°C
-            11 => [2, 3], // Shirt: suitable for 0°C - 20°C
-            12 => [2, 3], // Leggings: suitable for 0°C - 20°C
+            1 => [3, 4],       // T-Shirt: 11°C - 30°C
+            2 => [2, 3],       // Jeans: 0°C - 20°C
+            3 => [1, 2, 3],    // Jacket: Below 0°C to 20°C
+            4 => [3, 4],       // Dress: 11°C - 30°C
+            5 => [1, 2, 3],    // Sweater: Below 0°C to 20°C
+            6 => [3, 4],       // Shorts: 11°C - 30°C
+            7 => [3, 4],       // Skirt: 11°C - 30°C
+            8 => [1, 2],       // Coat: Below 0°C to 10°C
+            9 => [2, 3],       // Hoodie: 0°C - 20°C
+            10 => [3, 4],      // Tank Top: 11°C - 30°C
+            11 => [2, 3],      // Shirt: 0°C - 20°C
+            12 => [2, 3],      // Leggings: 0°C - 20°C
         ];
 
         // Clothing type to material mapping
@@ -75,20 +75,37 @@ class ClothingTableSeeder extends Seeder
             12 => [1, 2], // Leggings: Casual, Sport
         ];
 
+
+        $layerMapping = [
+            1 => 'base',   // T-Shirt
+            2 => 'pants',  // Jeans (изменено на 'pants')
+            3 => 'outer',  // Jacket
+            4 => 'base',   // Dress
+            5 => 'mid',    // Sweater
+            6 => 'pants',  // Shorts (изменено на 'pants')
+            7 => 'pants',  // Skirt (изменено на 'pants')
+            8 => 'outer',  // Coat
+            9 => 'mid',    // Hoodie
+            10 => 'base',  // Tank Top
+            11 => 'base',  // Shirt
+            12 => 'pants', // Leggings (изменено на 'pants')
+        ];
+
+
         // Clothing type to water resistance mapping
         $waterResistantMapping = [
-            1 => false, // T-Shirt: not water-resistant
-            2 => false, // Jeans: not water-resistant
-            3 => true,  // Jacket: water-resistant
-            4 => false, // Dress: not water-resistant
-            5 => false, // Sweater: not water-resistant
-            6 => false, // Shorts: not water-resistant
-            7 => false, // Skirt: not water-resistant
-            8 => true,  // Coat: water-resistant
-            9 => false, // Hoodie: not water-resistant
-            10 => false, // Tank Top: not water-resistant
-            11 => false, // Shirt: not water-resistant
-            12 => false, // Leggings: not water-resistant
+            1 => false, // T-Shirt
+            2 => false, // Jeans
+            3 => true,  // Jacket
+            4 => false, // Dress
+            5 => false, // Sweater
+            6 => false, // Shorts
+            7 => false, // Skirt
+            8 => true,  // Coat
+            9 => true,  // Hoodie (установлено в true)
+            10 => false, // Tank Top
+            11 => false, // Shirt
+            12 => false, // Leggings
         ];
 
         // Clothing type to color mapping
@@ -110,12 +127,13 @@ class ClothingTableSeeder extends Seeder
         // Generate unique combinations
         foreach (range(1, 12) as $type_id) {
             $gender = $genderMapping[$type_id];
+            $layer = $layerMapping[$type_id];
 
-            // Get valid styles for the current clothing type
+            // Получаем допустимые стили для текущего типа одежды
             $styles = $styleMapping[$type_id];
 
             foreach ($styles as $style_id) {
-                // Get valid temperature ranges, materials, water resistance and color for the current clothing type
+                // Получаем допустимые температурные диапазоны, материалы, водонепроницаемость и цвета для текущего типа одежды
                 $temperatureRanges = $temperatureRangeMapping[$type_id];
                 $materials = $materialMapping[$type_id];
                 $waterResistant = $waterResistantMapping[$type_id];
@@ -131,6 +149,7 @@ class ClothingTableSeeder extends Seeder
                                 'material_id' => $material_id,
                                 'gender' => $gender,
                                 'color' => $color,
+                                'layer' => $layer,
                                 'water_resistant' => $waterResistant,
                                 'created_at' => now(),
                                 'updated_at' => now(),

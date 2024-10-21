@@ -20,6 +20,7 @@ return new class extends Migration
             $table->foreignId('material_id')->constrained('clothing_materials');
             $table->enum('gender', ['male', 'female', 'neutral']);
             $table->string('color', 255);
+            $table->string('layer', 255);
             $table->boolean('water_resistant');
             $table->timestamps();
         });
