@@ -12,22 +12,27 @@
       <Loader class="h-8 w-8 animate-spin" />
     </div>
     <div v-else-if="suggestions">
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        <Card v-for="(items, category) in suggestions.clothing_suggestions" :key="category">
-          <CardHeader>
-            <CardTitle>{{ category }}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul class="space-y-2">
-              <li v-for="(item, index) in items.slice(0, 3)" :key="index" class="flex items-center space-x-2">
-                <span>{{ item.style }} {{ item.material }}</span>
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
+      <div v-if="typeof suggestions.clothing_suggestions === 'object'">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <Card v-for="(items, category) in suggestions.clothing_suggestions" :key="category">
+            <CardHeader>
+              <CardTitle>{{ category }}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul class="space-y-2">
+                <li v-for="(item, index) in items.slice(0, 3)" :key="index" class="flex items-center space-x-2">
+                  <span>{{ item.style }} {{ item.material }}</span>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+      <div v-else class="mt-16 text-center text-destructive">
+        {{ suggestions.clothing_suggestions || suggestions.message }}
       </div>
     </div>
-    <div v-else class="text-center text-gray-500">
+    <div v-else class="mt-16 text-center text-destructive">
       No clothing suggestions available.
     </div>
   </div>
@@ -38,7 +43,7 @@ import { ref, watch, onMounted } from 'vue'
 import api from '@/api'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { CircleAlert, Loader, Thermometer, Shirt } from 'lucide-vue-next'
+import { CircleAlert, Loader } from 'lucide-vue-next'
 
 // Interfaces for TypeScript
 interface ClothingItem {
@@ -52,7 +57,8 @@ interface ClothingSuggestions {
   temperature_range_id: number;
   temperature_range_text: string;
   weather_conditions: string[];
-  clothing_suggestions: Record<string, ClothingItem[]>;
+  clothing_suggestions: Record<string, ClothingItem[]> | string;
+  message?: string;
 }
 
 // Define props
