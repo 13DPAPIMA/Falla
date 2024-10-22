@@ -22,3 +22,7 @@ Route::get('/weather', [WeatherController::class, 'getWeather']);
 Route::post('/clothing-suggestions', [ClothingSuggestionsController::class, 'getClothingSuggestions']);
 
 Route::post('/upload-photo', [App\Http\Controllers\PhotoController::class, 'uploadPhoto']);
+
+use App\Http\Controllers\QuestionController;
+
+Route::resource('questions', QuestionController::class)->middleware('auth:sanctum');
