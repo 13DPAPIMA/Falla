@@ -16,12 +16,12 @@ class WardrobeService
 
     public function getWardrobeItems($wardrobeId)
     {
-        return WardrobeItem::with('clothing')->where('wardrobe_id', $wardrobeId)->get();
+        return WardrobeItem::with(['clothing.type', 'clothing.material', 'clothing.style'])->where('wardrobe_id', $wardrobeId)->get();
     }
 
     public function getAvailableClothing($wardrobeId)
     {
-        return Clothing::whereNotIn('id', function ($query) use ($wardrobeId) {
+        return Clothing::with(['type', 'material', 'style'])->whereNotIn('id', function ($query) use ($wardrobeId) {
             $query->select('clothing_id')
                 ->from('wardrobe_items')
                 ->where('wardrobe_id', $wardrobeId);
@@ -51,6 +51,8 @@ class WardrobeService
             'wardrobe_id' => $wardrobe->id,
             'clothing_id' => $clothingId,
         ]);
+
+        $wardrobeItem->load(['clothing.type', 'clothing.material', 'clothing.style']);
 
         return ['data' => $wardrobeItem, 'status' => 201];
     }

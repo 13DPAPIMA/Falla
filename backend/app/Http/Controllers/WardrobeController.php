@@ -24,7 +24,7 @@ class WardrobeController extends Controller
         $wardrobe = $this->wardrobeService->getUserWardrobe(auth()->id());
 
         if (!$wardrobe) {
-            return response()->json(['message' => 'Your wardrobe is empty'], 200);
+            return response()->json();
         }
 
         $wardrobeItems = $this->wardrobeService->getWardrobeItems($wardrobe->id);

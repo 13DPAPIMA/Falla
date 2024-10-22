@@ -4,8 +4,7 @@ import Home from '@/components/HomeView.vue';
 import Register from '@/components/auth/Register.vue';
 import Login from '@/components/auth/Login.vue';
 import Profile from '@/components/profile/Profile.vue'
-import WardrobeView from '@/components/WardrobeView.vue';
-import AllClothesDisplayTest from '@/components/AllClothesDisplayTest.vue';
+import Wardrobe from '@/components/WardrobeView.vue';
 import NotFound from '@/components/NotFound.vue';
 
 const routes: Array<RouteRecordRaw> = [
@@ -41,13 +40,7 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: '/wardrobe',
         name: 'wardrobe',
-        component: WardrobeView,
-        meta: { requiresAuth: true }
-    },
-    {
-        path: '/test1',
-        name: 'test1',
-        component: AllClothesDisplayTest,
+        component: Wardrobe,
         meta: { requiresAuth: true }
     },
     {
