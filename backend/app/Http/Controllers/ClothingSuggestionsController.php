@@ -10,188 +10,163 @@ class ClothingSuggestionsController extends Controller
     public function getClothingSuggestions(Request $request)
     {
         $validatedData = $request->validate([
-            'weather.list' => 'required|array|min:1', 
-            'weather.list.*.main.temp' => 'required|numeric', 
-            'weather.list.*.weather' => 'required|array|min:1', 
-            'weather.list.*.dt_txt' => 'required|string', 
-            'gender' => 'nullable|string|in:male,female,neutral' 
+            'weather.list' => 'required|array|min:1',
+            'weather.list.*.main.temp' => 'required|numeric',
+            'weather.list.*.weather' => 'required|array|min:1',
+            'weather.list.*.dt_txt' => 'required|string',
+            'gender' => 'nullable|string|in:male,female,neutral'
         ]);
 
-
         $gender = $validatedData['gender'] ?? 'neutral';
-        $weather = $validatedData['weather'];
+        $weatherList = $validatedData['weather']['list'];
 
-  
-        $forecasts = $this->getTodayForecasts($weather['list']);
+        // Шаг 1: Рассчитать среднюю температуру
+        $averageTemp = $this->calculateAverageTemperature($weatherList);
 
-
-        if (empty($forecasts)) {
-            return response()->json(['error' => 'No forecast data available for today.'], 400);
-        }
-
-        $temperatureRangeId = $this->getOverallTemperatureRangeId($forecasts);
+        // Шаг 2: Определить температурный диапазон
+        $temperatureRangeId = $this->getTemperatureRangeId($averageTemp);
         $temperatureRangeText = $this->getTemperatureRangeText($temperatureRangeId);
-        $weatherConditions = $this->getOverallWeatherConditions($forecasts);
 
-        $clothingQuery = Clothing::with(['photo', 'type', 'style', 'material'])
-            ->where('temperature_range_id', $temperatureRangeId) 
-            ->where('gender', $gender); 
+        // Шаг 3: Выявить погодные условия
+        $weatherConditions = $this->getWeatherConditions($weatherList);
 
-        $clothingQuery = $this->modifyQueryBasedOnWeather($clothingQuery, $weatherConditions, $forecasts);
+        // Шаги 4 и 5: Выбрать подходящие элементы одежды
+        $clothingItems = $this->getClothingItems($temperatureRangeId, $gender, $weatherConditions);
 
-        $clothingItems = $clothingQuery->get();
-
-        $clothingSuggestionsText = $this->generateClothingSuggestionsText($clothingItems);
+        // Шаг 6: Сгенерировать предложения по одежде
+        $clothingSuggestions = $this->generateClothingSuggestions($clothingItems);
 
         $responseData = [
             'temperature_range_id' => $temperatureRangeId,
             'temperature_range_text' => $temperatureRangeText,
             'weather_conditions' => $weatherConditions,
-            'clothing_suggestions' => $clothingSuggestionsText
+            'clothing_suggestions' => $clothingSuggestions,
         ];
 
-        if ($clothingItems->isEmpty()) {
+        if ($this->allLayersAreEmpty($clothingSuggestions)) {
             $responseData['message'] = 'No clothing suggestions available for the current conditions.';
+        } else {
+            $responseData['message'] = 'Here are some clothing suggestions for the current conditions.';
         }
 
         return response()->json($responseData);
     }
 
-    private function getTodayForecasts(array $forecastList)
+    // Добавьте этот метод в контроллер
+    private function allLayersAreEmpty($clothingSuggestions)
     {
-        $today = date('Y-m-d'); 
-        $todayForecasts = [];
-
-        foreach ($forecastList as $forecast) {
-            if (isset($forecast['dt_txt']) && strpos($forecast['dt_txt'], $today) === 0) {
-                $todayForecasts[] = $forecast; 
+        foreach ($clothingSuggestions as $layer => $items) {
+            if (!empty($items)) {
+                return false;
             }
         }
-
-        return $todayForecasts;
+        return true;
     }
 
-    private function getOverallTemperatureRangeId(array $forecasts)
+
+
+    private function calculateAverageTemperature(array $weatherList)
     {
-        $temperatures = array_map(function ($forecast) {
-            return $forecast['main']['temp'];
-        }, $forecasts);
-
-        if (empty($temperatures)) {
-            return null; 
-        }
-
-        $minTemp = min($temperatures);
-        $maxTemp = max($temperatures); 
-
-        if ($maxTemp >= 30) {
-            return 1;
-        } elseif ($maxTemp >= 20) {
-            return 2;
-        } elseif ($minTemp >= 10) {
-            return 3; 
-        } elseif ($minTemp >= 0) {
-            return 4;
-        } else {
-            return 5;
-        }
+        $temperatures = array_column(array_column($weatherList, 'main'), 'temp');
+        return array_sum($temperatures) / count($temperatures);
     }
 
+    private function getTemperatureRangeId($averageTemp)
+    {
+        if ($averageTemp < 0) {
+            return 1; // Below 0°C
+        } elseif ($averageTemp <= 10) {
+            return 2; // 0°C - 10°C
+        } elseif ($averageTemp <= 20) {
+            return 3; // 11°C - 20°C
+        } elseif ($averageTemp <= 30) {
+            return 4; // 21°C - 30°C
+        } else {
+            return 5; // Above 30°C
+        }
+    }
 
     private function getTemperatureRangeText($temperatureRangeId)
     {
-        switch ($temperatureRangeId) {
-            case 1:
-                return 'Very hot'; 
-            case 2:
-                return 'Warm';
-            case 3:
-                return 'Decent';
-            case 4:
-                return 'Cold';
-            case 5:
-                return 'Very cold';
-            default:
-                return 'Unknown';
-        }
+        $ranges = [
+            1 => 'Below 0°C',
+            2 => '0°C - 10°C',
+            3 => '11°C - 20°C',
+            4 => '21°C - 30°C',
+            5 => 'Above 30°C',
+        ];
+
+        return $ranges[$temperatureRangeId] ?? 'Unknown';
     }
 
-
-    private function getOverallWeatherConditions(array $forecasts)
+    private function getWeatherConditions(array $weatherList)
     {
         $conditions = [];
-
-        foreach ($forecasts as $forecast) {
+        foreach ($weatherList as $forecast) {
             foreach ($forecast['weather'] as $weather) {
-                $conditions[] = strtolower($weather['main']); 
+                $conditions[] = strtolower($weather['main']);
             }
         }
-
-        return array_unique($conditions); 
+        return array_unique($conditions);
     }
 
-
-    private function modifyQueryBasedOnWeather($query, array $weatherConditions, array $forecasts)
+    private function getClothingItems($temperatureRangeId, $gender, $weatherConditions)
     {
-        if (in_array('rain', $weatherConditions) || in_array('drizzle', $weatherConditions)) {
+    $layers = ['base', 'mid', 'outer', 'pants']; // Добавлен слой 'pants'
+    $clothingItems = [];
+
+    foreach ($layers as $layer) {
+        $query = Clothing::with(['photo', 'type', 'style', 'material'])
+            ->where('temperature_range_id', $temperatureRangeId)
+            ->where(function ($q) use ($gender) {
+                $q->where('gender', $gender)->orWhere('gender', 'neutral');
+            })
+            ->where('layer', $layer);
+
+        // Исключаем неподходящие типы одежды
+        if ($temperatureRangeId <= 2 && $layer === 'base') {
+            $query->whereNotIn('type_id', [1, 6, 10]); // Исключаем майки, шорты, топы
+        }
+
+        // Учитываем погодные условия для верхнего слоя
+        if ($layer === 'outer' && (in_array('rain', $weatherConditions) || in_array('drizzle', $weatherConditions))) {
             $query->where('water_resistant', true);
         }
 
-        if (in_array('snow', $weatherConditions)) {
-            $query->where('water_resistant', true)
-                  ->where('warmth_level', '>=', 4);
-        }
-
-        return $query;
+        $clothingItems[$layer] = $query->get();
     }
 
+        return $clothingItems;
+    }
+    
 
-    private function hasSignificantTemperatureVariation(array $forecasts)
-    {
-        $temperatures = array_map(function ($forecast) {
-            return $forecast['main']['temp'];
-        }, $forecasts);
 
-        if (empty($temperatures)) {
-            return false; 
+private function generateClothingSuggestions($clothingItems)
+{
+    $suggestions = [];
+
+    foreach ($clothingItems as $layer => $items) {
+        if (empty($items)) {
+            continue;
         }
 
-        $maxTemp = max($temperatures); 
-        $minTemp = min($temperatures); 
+        $layerSuggestions = [];
 
-        return ($maxTemp - $minTemp) >= 8; 
-    }
-
-
-    private function generateClothingSuggestionsText($clothingItems)
-    {
-        $suggestions = [];
-
-        foreach ($clothingItems as $item) {
-            $typeName = $item->type->type ?? null;
-            $styleName = $item->style->style ?? null;
-            $materialName = $item->material->material ?? null;
-            $photoName = $item->photo->photo ?? null;
-
-            if (!isset($suggestions[$typeName])) {
-                $suggestions[$typeName] = [];
-            }
-
-            $suggestionItem = [
-                'type' => $typeName,
-                'style' => $styleName,
-                'material' => $materialName,
-                'photo' => $photoName
+        foreach ($items as $item) {
+            $layerSuggestions[] = [
+                'type' => $item->type->type ?? null,
+                'style' => $item->style->style ?? null,
+                'material' => $item->material->material ?? null,
+                'photo' => $item->photo->url ?? null,
             ];
-
-            $suggestions[$typeName][] = $suggestionItem;
         }
 
-        if (empty($suggestions)) {
-            return 'No clothing suggestions available for the current conditions.';
-        }
-
-        return ($suggestions);
+        $suggestions[$layer] = $layerSuggestions;
     }
+
+    return $suggestions;
+}
+    
+
 
 }
