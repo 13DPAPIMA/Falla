@@ -74,10 +74,10 @@
 import { ref, computed, onMounted } from 'vue'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
-import ClothingItem from './ClothingItem.vue'
-import EmptyState from './EmptyState.vue'
-import FilterBar from './FilterBar.vue'
-import api from '@/api'
+import ClothingItem from '@/components/wardrobe/ClothingItem.vue'
+import EmptyState from '@/components/wardrobe/EmptyState.vue'
+import FilterBar from '@/components/wardrobe/FilterBar.vue'
+import api from '@/api.ts'
 
 interface WardrobeItem {
   id: number

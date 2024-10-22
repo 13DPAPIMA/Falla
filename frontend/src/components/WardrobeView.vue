@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Wardrobe from '@/components/Wardrobe.vue'
+import Wardrobe from '@/components/wardrobe/Wardrobe.vue'
 </script>
 
 <template>
