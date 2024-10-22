@@ -63,8 +63,6 @@ class ClothingSuggestionsController extends Controller
         return true;
     }
 
-
-
     private function calculateAverageTemperature(array $weatherList)
     {
         $temperatures = array_column(array_column($weatherList, 'main'), 'temp');
@@ -138,35 +136,32 @@ class ClothingSuggestionsController extends Controller
 
         return $clothingItems;
     }
-    
 
+    private function generateClothingSuggestions($clothingItems)
+    {
+        $suggestions = [];
 
-private function generateClothingSuggestions($clothingItems)
-{
-    $suggestions = [];
+        foreach ($clothingItems as $layer => $items) {
+            if (empty($items)) {
+                continue;
+            }
 
-    foreach ($clothingItems as $layer => $items) {
-        if (empty($items)) {
-            continue;
+            $layerSuggestions = [];
+
+            foreach ($items as $item) {
+                $layerSuggestions[] = [
+                    'type' => $item->type->type ?? null,
+                    'style' => $item->style->style ?? null,
+                    'material' => $item->material->material ?? null,
+                    'color' => $item->color ?? null,
+                    'water_resistant' => $item->water_resistant ?? null,
+                    'photo' => $item->photo->url ?? null,
+                ];
+            }
+
+            $suggestions[$layer] = $layerSuggestions;
         }
 
-        $layerSuggestions = [];
-
-        foreach ($items as $item) {
-            $layerSuggestions[] = [
-                'type' => $item->type->type ?? null,
-                'style' => $item->style->style ?? null,
-                'material' => $item->material->material ?? null,
-                'photo' => $item->photo->url ?? null,
-            ];
-        }
-
-        $suggestions[$layer] = $layerSuggestions;
+        return $suggestions;
     }
-
-    return $suggestions;
-}
-    
-
-
 }
