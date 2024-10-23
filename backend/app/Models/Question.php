@@ -9,18 +9,6 @@ class Question extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'user_id',
-        'content',
-    ];
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    public function answers()
-    {
-        return $this->hasMany(Answer::class);
-    }
+    protected $fillable = ['topic', 'photo_link', 'description'];
 }
+

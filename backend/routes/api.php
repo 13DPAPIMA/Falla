@@ -11,6 +11,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Api\QuestionController;
 
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
@@ -22,3 +23,5 @@ Route::get('/weather', [WeatherController::class, 'getWeather']);
 Route::post('/clothing-suggestions', [ClothingSuggestionsController::class, 'getClothingSuggestions']);
 
 Route::post('/upload-photo', [App\Http\Controllers\PhotoController::class, 'uploadPhoto']);
+
+Route::apiResource('questions', QuestionController::class);
