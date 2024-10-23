@@ -42,3 +42,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/clothing', [ClothingController::class, 'index']);
     Route::get('/clothing/{id}', [ClothingController::class, 'show']);
 });
+
+use App\Http\Controllers\QuestionController;
+
+Route::resource('questions', QuestionController::class)->middleware('auth:sanctum');
+

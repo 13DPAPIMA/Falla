@@ -11,7 +11,8 @@ class Question extends Model
 
     protected $fillable = [
         'user_id',
-        'content',
+        'topic',
+        'description'
     ];
 
     public function user()
@@ -24,3 +25,4 @@ class Question extends Model
         return $this->hasMany(Answer::class);
     }
 }
+

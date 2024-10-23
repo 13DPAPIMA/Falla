@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router'; // Import useRouter for navigation
+import { useRouter } from 'vue-router'; 
 
 defineProps<{ msg: string }>();
 
-const router = useRouter(); // Create a router instance
+const router = useRouter();
 const count = ref(0);
 
 // Importing images
@@ -56,7 +56,7 @@ const fetchWeather = async () => {
 onMounted(fetchWeather);
 
 const navigateToOtherPage = () => {
-  router.push('/home'); // Replace with your target route
+  router.push('/home');
 };
 </script>
 
@@ -74,7 +74,7 @@ const navigateToOtherPage = () => {
       <img src="../assets/T-Shirt_Object.png" class="cloud cloud_33" alt="Cloud 3">
     </div>
 
-    <button class="round-button" @click="navigateToOtherPage">Let's begin!</button> <!-- Centered button -->
+    <button class="round-button" @click="navigateToOtherPage">Let's begin!</button>
   </div>
 </template>
 
@@ -90,34 +90,34 @@ const navigateToOtherPage = () => {
   padding-top: 20px;
 }
 
-/* Add styles for the round button */
+
 .round-button {
-  position: absolute; /* Use absolute positioning */
-  top: 93%; /* Adjust this value to move the button higher */
-  left: 50%; /* Center horizontally */
-  transform: translate(-50%, -50%); /* Center the button */
+  position: absolute;
+  top: 93%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: 180px;
   height: 70px;
   border-radius: 100%;
-  background-color: #E5C9AA; /* Green background */
-  color: #73695C; /* Text color */
-  border: 3px solid #000000; /* Border color */
+  background-color: #E5C9AA;
+  color: #73695C;
+  border: 3px solid #000000;
   font-size: 1.5rem;
-  font-weight: bold; /* Match this with your title font */
+  font-weight: bold;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 5px; /* Space above the button */
+  margin-top: 5px;
   transition: background-color 0.3s;
   z-index: 2;
 }
 
 .round-button:hover {
-  background-color: #498398; /* Darker green on hover */
+  background-color: #498398;
 }
 
-/* Existing styles... */
+
 .welcome-page::before,
 .welcome-page::after {
   content: '';
@@ -167,7 +167,7 @@ const navigateToOtherPage = () => {
   height: 100%;
 }
 
-/* Existing cloud styles... */
+
 .cloud {
   position: absolute;
   width: 400px;
