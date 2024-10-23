@@ -1,12 +1,11 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import {ref, computed, onMounted} from 'vue'
 
 const role = ref(null)
 
 // Check for user role in local storage
 onMounted(() => {
-  const role = localStorage.getItem('role') || 'user' // Retrieve user role from local storage
-
+  role.value = localStorage.getItem('role') || 'user'
 })
 
 const isStylist = computed(() => role.value === 'stylist')
@@ -63,18 +62,22 @@ nav {
   background-color: #f8f9fa;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
+
 a {
   font-weight: 500;
   transition: all 0.2s ease;
 }
+
 a:hover {
   color: #4a90e2;
 }
+
 a.active {
   background-color: #1d4ed8;
   color: white;
   border-radius: 4px;
 }
+
 img {
   height: 40px;
 }

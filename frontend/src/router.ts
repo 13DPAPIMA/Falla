@@ -6,6 +6,7 @@ import Login from '@/components/auth/Login.vue';
 import Profile from '@/components/profile/Profile.vue'
 import Wardrobe from '@/components/WardrobeView.vue';
 import NotFound from '@/components/NotFound.vue';
+import StylistPanel from '@/components/StylistPanel.vue';
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -41,6 +42,13 @@ const routes: Array<RouteRecordRaw> = [
         path: '/wardrobe',
         name: 'wardrobe',
         component: Wardrobe,
+        meta: { requiresAuth: true }
+    },
+    ,
+    {
+        path: '/stylist-panel',
+        name: 'Stylist Panel',
+        component: StylistPanel,
         meta: { requiresAuth: true }
     },
     {
