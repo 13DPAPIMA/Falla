@@ -11,7 +11,7 @@ class QuestionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'topic' => 'required|in:Suggestions,Clothes,Other',
+            'topic' => 'required|string',
             'description' => 'required|string',
         ]);
 
@@ -37,8 +37,8 @@ class QuestionController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'topic' => 'sometimes|required|in:Suggestions,Clothes,Other',
-            'description' => 'sometimes|required|string',
+            'topic' => 'sometimes|string',
+            'description' => 'sometimes|string',
         ]);
 
         $question = Question::findOrFail($id);
