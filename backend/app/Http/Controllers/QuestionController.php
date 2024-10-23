@@ -12,7 +12,6 @@ class QuestionController extends Controller
     {
         $request->validate([
             'topic' => 'required|in:Suggestions,Clothes,Other',
-            'photo_link' => 'nullable|url',
             'description' => 'required|string',
         ]);
 
@@ -39,7 +38,6 @@ class QuestionController extends Controller
     {
         $request->validate([
             'topic' => 'sometimes|required|in:Suggestions,Clothes,Other',
-            'photo_link' => 'nullable|url',
             'description' => 'sometimes|required|string',
         ]);
 

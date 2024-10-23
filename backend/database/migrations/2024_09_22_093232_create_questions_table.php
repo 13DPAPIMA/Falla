@@ -11,7 +11,6 @@ class CreateQuestionsTable extends Migration
         Schema::create('questions', function (Blueprint $table) {
             $table->id();
             $table->enum('topic', ['Suggestions', 'Clothes', 'Other']);
-            $table->string('photo_link')->nullable();
             $table->text('description');
             $table->timestamps();
         });
