@@ -15,7 +15,12 @@ class QuestionController extends Controller
             'description' => 'required|string',
         ]);
 
-        $question = Question::create($request->all());
+        $question = Question::create([
+            'user_id' => $request->user()->id,
+            'topic' => $request->topic,
+            'description' => $request->description,
+        ]);
+
         return response()->json($question, 201);
     }
 
