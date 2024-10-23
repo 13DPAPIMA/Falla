@@ -47,3 +47,7 @@ use App\Http\Controllers\QuestionController;
 
 Route::resource('questions', QuestionController::class)->middleware('auth:sanctum');
 
+use App\Http\Controllers\AnswerController;
+
+Route::resource('answers', AnswerController::class)->middleware('auth:sanctum');
+
