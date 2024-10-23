@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen p-6">
 
-    <!-- Header -->
+    <NavBar></NavBar>
 
     <main class="max-w-3xl mx-auto p-6">
       <div class="mb-6">
@@ -66,6 +66,8 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import ClothingSuggestions from './ClothingSuggestions.vue'
 import { Cloud, CloudRainWind, Wind, Thermometer, Loader } from 'lucide-vue-next'
+
+import NavBar from '@/components/NavBar.vue';
 
 interface WeatherData {
   city: {
