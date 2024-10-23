@@ -24,7 +24,7 @@ use App\Http\Controllers\ClothingSuggestionsController;
 
 Route::get('/weather', [WeatherController::class, 'getWeather']);
 
-Route::post('/clothing-suggestions', [ClothingSuggestionsController::class, 'getClothingSuggestions']);
+Route::middleware('auth:sanctum')->post('/clothing-suggestions', [ClothingSuggestionsController::class, 'getClothingSuggestions']);
 
 Route::post('/upload-photo', [App\Http\Controllers\PhotoController::class, 'uploadPhoto']);
 

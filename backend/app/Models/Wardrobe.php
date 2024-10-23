@@ -18,8 +18,13 @@ class Wardrobe extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function items()
+    public function wardrobeItems()
     {
         return $this->hasMany(WardrobeItem::class);
+    }
+
+    public function clothings()
+    {
+        return $this->belongsToMany(Clothing::class, 'wardrobe_items', 'wardrobe_id', 'clothing_id');
     }
 }

@@ -2,57 +2,86 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\WardrobeService; 
 use App\Models\Clothing;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ClothingSuggestionsController extends Controller
 {
     public function getClothingSuggestions(Request $request)
-    {
-        $validatedData = $request->validate([
-            'weather.list' => 'required|array|min:1',
-            'weather.list.*.main.temp' => 'required|numeric',
-            'weather.list.*.weather' => 'required|array|min:1',
-            'weather.list.*.dt_txt' => 'required|string',
-            'gender' => 'nullable|string|in:male,female,neutral'
-        ]);
+{
+    $validatedData = $request->validate([
+        'weather.list' => 'required|array|min:1',
+        'weather.list.*.main.temp' => 'required|numeric',
+        'weather.list.*.weather' => 'required|array|min:1',
+        'weather.list.*.dt_txt' => 'required|string',
+        'gender' => 'nullable|string|in:male,female,neutral'
+    ]);
 
-        $gender = $validatedData['gender'] ?? 'neutral';
-        $weatherList = $validatedData['weather']['list'];
-
-        // Шаг 1: Рассчитать среднюю температуру
-        $averageTemp = $this->calculateAverageTemperature($weatherList);
-
-        // Шаг 2: Определить температурный диапазон
-        $temperatureRangeId = $this->getTemperatureRangeId($averageTemp);
-        $temperatureRangeText = $this->getTemperatureRangeText($temperatureRangeId);
-
-        // Шаг 3: Выявить погодные условия
-        $weatherConditions = $this->getWeatherConditions($weatherList);
-
-        // Шаги 4 и 5: Выбрать подходящие элементы одежды
-        $clothingItems = $this->getClothingItems($temperatureRangeId, $gender, $weatherConditions);
-
-        // Шаг 6: Сгенерировать предложения по одежде
-        $clothingSuggestions = $this->generateClothingSuggestions($clothingItems);
-
-        $responseData = [
-            'temperature_range_id' => $temperatureRangeId,
-            'temperature_range_text' => $temperatureRangeText,
-            'weather_conditions' => $weatherConditions,
-            'clothing_suggestions' => $clothingSuggestions,
-        ];
-
-        if ($this->allLayersAreEmpty($clothingSuggestions)) {
-            $responseData['message'] = 'No clothing suggestions available for the current conditions.';
-        } else {
-            $responseData['message'] = 'Here are some clothing suggestions for the current conditions.';
-        }
-
-        return response()->json($responseData);
+    $user = $request->user();
+    if ($user) {
+        $userId = $user->id;
+        $gender = $validatedData['gender'] ?? $user->gender ?? 'neutral';
+        Log::info("Authenticated User ID: " . $userId);
+    } else {
+        Log::info("No authenticated user.");
+        return response()->json(['message' => 'User not authenticated'], 401);
     }
 
-    // Добавьте этот метод в контроллер
+    $weatherList = $validatedData['weather']['list'];
+    $averageTemp = $this->calculateAverageTemperature($weatherList);
+    $temperatureRangeId = $this->getTemperatureRangeId($averageTemp);
+    $temperatureRangeText = $this->getTemperatureRangeText($temperatureRangeId);
+    $weatherConditions = $this->getWeatherConditions($weatherList);
+
+    $wardrobeService = app(WardrobeService::class);
+    $wardrobe = $wardrobeService->getUserWardrobe($userId);
+
+    if ($wardrobe) {
+        $wardrobeClothingIds = $wardrobe->wardrobeItems()->pluck('clothing_id');
+        $wardrobeClothings = Clothing::with(['type', 'style', 'material'])
+            ->whereIn('id', $wardrobeClothingIds)
+            ->get();
+
+        Log::info("User's wardrobe contains " . $wardrobeClothings->count() . " items.");
+
+        foreach ($wardrobeClothings as $clothing) {
+            Log::info("Wardrobe Item - ID: " . $clothing->id .
+                ", Type: " . ($clothing->type->type ?? 'Unknown') .
+                ", Layer: " . $clothing->layer .
+                ", Temperature Range ID: " . $clothing->temperature_range_id .
+                ", Gender: " . $clothing->gender);
+        }
+    } else {
+        Log::info("No wardrobe found for user ID: " . $userId);
+    }
+
+    $result = $this->getClothingItems($temperatureRangeId, $gender, $weatherConditions, $userId);
+    $clothingItems = $result['clothingItems'];
+    $wardrobeClothingIds = $result['wardrobeClothingIds'];
+
+    $clothingSuggestions = $this->generateClothingSuggestions($clothingItems, $wardrobeClothingIds);
+
+    $responseData = [
+        'temperature_range_id' => $temperatureRangeId,
+        'temperature_range_text' => $temperatureRangeText,
+        'weather_conditions' => $weatherConditions,
+        'clothing_suggestions' => $clothingSuggestions,
+    ];
+
+    if ($this->allLayersAreEmpty($clothingSuggestions)) {
+        $responseData['message'] = 'No clothing suggestions available for the current conditions.';
+    } else {
+        $responseData['message'] = 'Here are some clothing suggestions for the current conditions.';
+    }
+
+    return response()->json($responseData);
+}
+
+
+
     private function allLayersAreEmpty($clothingSuggestions)
     {
         foreach ($clothingSuggestions as $layer => $items) {
@@ -108,60 +137,96 @@ class ClothingSuggestionsController extends Controller
         return array_unique($conditions);
     }
 
-    private function getClothingItems($temperatureRangeId, $gender, $weatherConditions)
-    {
-    $layers = ['base', 'mid', 'outer', 'pants']; // Добавлен слой 'pants'
+    private function getClothingItems($temperatureRangeId, $gender, $weatherConditions, $userId)
+{
+    $layers = ['base', 'mid', 'outer', 'pants'];
     $clothingItems = [];
+    $wardrobeClothingIds = collect();
+
+    $wardrobeService = app(WardrobeService::class);
+    $wardrobe = $wardrobeService->getUserWardrobe($userId);
+
+    if ($wardrobe) {
+        $wardrobeClothingIds = $wardrobe->wardrobeItems()->pluck('clothing_id');
+        Log::info("Wardrobe Clothing IDs: " . $wardrobeClothingIds->implode(','));
+    } else {
+        Log::info("No wardrobe found for user ID: " . $userId);
+    }
 
     foreach ($layers as $layer) {
-        $query = Clothing::with(['photo', 'type', 'style', 'material'])
-            ->where('temperature_range_id', $temperatureRangeId)
+        $baseQuery = Clothing::with(['photo', 'type', 'style', 'material'])
+            // ->where('temperature_range_id', $temperatureRangeId) // Закомментировано для тестирования
             ->where(function ($q) use ($gender) {
                 $q->where('gender', $gender)->orWhere('gender', 'neutral');
             })
             ->where('layer', $layer);
 
-        // Исключаем неподходящие типы одежды
-        if ($temperatureRangeId <= 2 && $layer === 'base') {
-            $query->whereNotIn('type_id', [1, 6, 10]); // Исключаем майки, шорты, топы
-        }
+        // Остальные условия...
 
-        // Учитываем погодные условия для верхнего слоя
-        if ($layer === 'outer' && (in_array('rain', $weatherConditions) || in_array('drizzle', $weatherConditions))) {
-            $query->where('water_resistant', true);
-        }
+        if ($wardrobeClothingIds->isNotEmpty()) {
+            $wardrobeItems = (clone $baseQuery)
+                ->whereIn('id', $wardrobeClothingIds)
+                ->get();
 
-        $clothingItems[$layer] = $query->get();
-    }
+            Log::info("For layer '$layer', found " . $wardrobeItems->count() . " items in wardrobe matching the filters.");
 
-        return $clothingItems;
-    }
-
-    private function generateClothingSuggestions($clothingItems)
-    {
-        $suggestions = [];
-
-        foreach ($clothingItems as $layer => $items) {
-            if (empty($items)) {
+            if ($wardrobeItems->isNotEmpty()) {
+                $clothingItems[$layer] = $wardrobeItems;
                 continue;
+            } else {
+                Log::info("No wardrobe items match the filters for layer '$layer'.");
             }
-
-            $layerSuggestions = [];
-
-            foreach ($items as $item) {
-                $layerSuggestions[] = [
-                    'type' => $item->type->type ?? null,
-                    'style' => $item->style->style ?? null,
-                    'material' => $item->material->material ?? null,
-                    'color' => $item->color ?? null,
-                    'water_resistant' => $item->water_resistant ?? null,
-                    'photo' => $item->photo->url ?? null,
-                ];
-            }
-
-            $suggestions[$layer] = $layerSuggestions;
         }
 
-        return $suggestions;
+        $generalItems = $baseQuery->get();
+        Log::info("For layer '$layer', found " . $generalItems->count() . " general items matching the filters.");
+
+        $clothingItems[$layer] = $generalItems;
     }
+
+    return [
+        'clothingItems' => $clothingItems,
+        'wardrobeClothingIds' => $wardrobeClothingIds
+    ];
+}
+
+
+    
+
+private function generateClothingSuggestions($clothingItems, $wardrobeClothingIds)
+{
+    $suggestions = [];
+
+    foreach ($clothingItems as $layer => $items) {
+        if ($items->isEmpty()) {
+            continue;
+        }
+
+        $layerSuggestions = [];
+
+        foreach ($items as $item) {
+            $isFromWardrobe = $wardrobeClothingIds->contains(function ($value) use ($item) {
+                return intval($value) === intval($item->id);
+            });
+
+            $layerSuggestions[] = [
+                'type' => $item->type->type ?? null,
+                'style' => $item->style->style ?? null,
+                'material' => $item->material->material ?? null,
+                'color' => $item->color ?? null,
+                'water_resistant' => $item->water_resistant ?? null,
+                'photo' => $item->photo->url ?? null,
+                'from_wardrobe' => $isFromWardrobe,
+            ];
+        }
+
+        $suggestions[$layer] = $layerSuggestions;
+    }
+
+    return $suggestions;
+}
+
+
+    
+
 }

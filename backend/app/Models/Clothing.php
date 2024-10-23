@@ -45,4 +45,14 @@ class Clothing extends Model
     {
         return $this->belongsTo(ClothingMaterial::class);
     }
+
+    public function wardrobeItems()
+    {
+        return $this->hasMany(WardrobeItem::class);
+    }
+
+    public function wardrobes()
+    {
+        return $this->belongsToMany(Wardrobe::class, 'wardrobe_items', 'clothing_id', 'wardrobe_id');
+    }
 }
