@@ -49,7 +49,7 @@ const routes: Array<RouteRecordRaw> = [
         path: '/stylist-panel',
         name: 'Stylist Panel',
         component: StylistPanel,
-        meta: { requiresAuth: true }
+        meta: { requiresAuth: true, role: 'stylist' }
     },
     {
         path: '/:pathMatch(.*)*',
@@ -79,7 +79,7 @@ router.beforeEach((to, from, next) => {
 
     // If route requires a specific role and user doesn't have it
     if (to.meta.role && to.meta.role !== role) {
-        return next('/');
+        return next({ name: 'NotFound' });
     }
 
     next(); // Proceed to the route
