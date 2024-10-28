@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Faker\Factory as Faker;
 use Illuminate\Database\Seeder;
+use App\Models\ClothingPhoto;
 
 class ClothingTableSeeder extends Seeder
 {
@@ -124,13 +125,27 @@ class ClothingTableSeeder extends Seeder
             12 => ['black', 'gray', 'blue'], // Leggings
         ];
 
+        $photoMapping = [
+            1 => 1,   // T-Shirt
+            2 => 2,   // Jeans
+            3 => 1,   // Shirt
+            4 => null, // Dress
+            5 => 3,   // Sweater
+            6 => 2,   // Shorts
+            7 => null, // Skirt
+            8 => null, // Coat
+            9 => 3,   // Hoodie
+            10 => null, // Tank Top
+            11 => 1,  // Shirt
+            12 => 2,  // Leggings
+        ];
+
         // Generate unique combinations
         foreach (range(1, 12) as $type_id) {
             $gender = $genderMapping[$type_id];
             $layer = $layerMapping[$type_id];
-
             // Получаем допустимые стили для текущего типа одежды
-            $styles = $styleMapping[$type_id];
+            $styles = $styleMapping[$type_id] ?? NULL;
 
             foreach ($styles as $style_id) {
                 // Получаем допустимые температурные диапазоны, материалы, водонепроницаемость и цвета для текущего типа одежды
@@ -139,6 +154,8 @@ class ClothingTableSeeder extends Seeder
                 $waterResistant = $waterResistantMapping[$type_id];
                 $colors = $colorMappingByType[$type_id];
 
+                $photo = $photoMapping[$type_id];
+                
                 foreach ($temperatureRanges as $temperature_range_id) {
                     foreach ($materials as $material_id) {
                         foreach ($colors as $color) {
@@ -149,6 +166,7 @@ class ClothingTableSeeder extends Seeder
                                 'material_id' => $material_id,
                                 'gender' => $gender,
                                 'color' => $color,
+                                'photo_id' => $photo, 
                                 'layer' => $layer,
                                 'water_resistant' => $waterResistant,
                                 'created_at' => now(),
