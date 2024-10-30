@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Auth\Events\Registered;
 
 class AuthController extends Controller
 {
@@ -17,13 +18,13 @@ class AuthController extends Controller
             'gender' => 'required|in:Male,Female',
         ]);
 
-        // Set the 'name' to the 'email'
         $validatedData['name'] = $validatedData['email'];
-
-        // Add the default role
         $validatedData['role'] = 'user';
 
         $user = User::create($validatedData);
+
+        // Dispatch the Registered event to send the verification email
+        event(new Registered($user));
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
