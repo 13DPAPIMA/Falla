@@ -110,7 +110,7 @@ class ClothingSuggestionsController extends Controller
 
     private function getClothingItems($temperatureRangeId, $gender, $weatherConditions)
     {
-    $layers = ['base', 'mid', 'outer', 'pants']; // Добавлен слой 'pants'
+    $layers = ['base', 'mid', 'outer', 'pants']; 
     $clothingItems = [];
 
     foreach ($layers as $layer) {
@@ -121,12 +121,10 @@ class ClothingSuggestionsController extends Controller
             })
             ->where('layer', $layer);
 
-        // Исключаем неподходящие типы одежды
         if ($temperatureRangeId <= 2 && $layer === 'base') {
-            $query->whereNotIn('type_id', [1, 6, 10]); // Исключаем майки, шорты, топы
+            $query->whereNotIn('type_id', [1, 6, 10]); 
         }
 
-        // Учитываем погодные условия для верхнего слоя
         if ($layer === 'outer' && (in_array('rain', $weatherConditions) || in_array('drizzle', $weatherConditions))) {
             $query->where('water_resistant', true);
         }
@@ -139,6 +137,7 @@ class ClothingSuggestionsController extends Controller
 
     private function generateClothingSuggestions($clothingItems)
     {
+
         $suggestions = [];
 
         foreach ($clothingItems as $layer => $items) {
@@ -155,7 +154,7 @@ class ClothingSuggestionsController extends Controller
                     'material' => $item->material->material ?? null,
                     'color' => $item->color ?? null,
                     'water_resistant' => $item->water_resistant ?? null,
-                    'photo' => $item->photo->url ?? null,
+                    'photo' => $item->photo->photo_url ?? null,
                 ];
             }
 
@@ -164,4 +163,7 @@ class ClothingSuggestionsController extends Controller
 
         return $suggestions;
     }
+
+
+
 }
