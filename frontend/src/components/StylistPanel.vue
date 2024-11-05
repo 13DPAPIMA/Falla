@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import NavBar from "@/components/NavBar.vue";
+import HeaderNavBar from "@/components/HeaderNavbar.vue";
 // Placeholder for questions fetched from the backend
 const questions = ref([
   { id: 1, user: 'User1', question: 'What should I wear to a wedding?', answer: '' },
@@ -27,7 +27,7 @@ const submitAnswer = (questionId, answer) => {
 </script>
 
 <template>
-  <NavBar></NavBar>
+  <HeaderNavBar></HeaderNavBar>
 
   <div id="main" class="h-screen flex flex-col justify-start items-start p-8">
     <!-- Display each question from the users -->

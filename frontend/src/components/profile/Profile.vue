@@ -2,11 +2,12 @@
 
 import ProfileLayout from "@/layouts/ProfileLayout.vue";
 import ProfileForm from "@/components/profile/ProfileForm.vue";
-import NavBar from "@/components/NavBar.vue";
+import HeaderNavBar from "@/components/HeaderNavbar.vue";
 </script>
 
 <template>
-  <NavBar></NavBar>
+  <HeaderNavBar></HeaderNavBar>
+
   <ProfileLayout>
     <ProfileForm />
   </ProfileLayout>
