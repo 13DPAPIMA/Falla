@@ -3,20 +3,9 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-
-// user routes
-use App\Http\Controllers\AuthController;
-
-Route::get('/user', function (Request $request) {
+Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
-
-Route::post('register', [AuthController::class, 'register']);
-Route::post('login', [AuthController::class, 'login']);
-Route::middleware('auth:sanctum')->post('logout', [AuthController::class, 'logout']);
-Route::middleware('auth:sanctum')->put('user', [AuthController::class, 'update']);
-Route::middleware('auth:sanctum')->post('verify-password', [AuthController::class, 'verifyPassword']);
-
 
 // weather and suggestion routes
 use App\Http\Controllers\WeatherController;
@@ -32,7 +21,7 @@ Route::post('/upload-photo', [App\Http\Controllers\PhotoController::class, 'uplo
 use App\Http\Controllers\ClothingController;
 use App\Http\Controllers\WardrobeController;
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 
     Route::get('/wardrobe', [WardrobeController::class, 'index']);
     Route::get('/available-clothing', [WardrobeController::class, 'availableClothing']);
@@ -45,9 +34,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
 use App\Http\Controllers\QuestionController;
 
-Route::resource('questions', QuestionController::class)->middleware('auth:sanctum');
+Route::resource('questions', QuestionController::class)->middleware(['auth:sanctum', 'verified']);
 
 use App\Http\Controllers\AnswerController;
 
-Route::resource('answers', AnswerController::class)->middleware('auth:sanctum');
+Route::resource('answers', AnswerController::class)->middleware(['auth:sanctum', 'verified']);
 
+require __DIR__.'/auth.php';
