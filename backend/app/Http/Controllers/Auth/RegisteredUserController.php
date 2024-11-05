@@ -33,7 +33,8 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         $data = [
-            'user' => $user
+            'user' => $user,
+            'token' => $user->createToken('token for' . $user->email)->plainTextToken
         ];
 
         return response()->json($data, 201);
