@@ -3,14 +3,13 @@ import { useForm } from 'vee-validate';
 import { useToast } from '@/components/ui/toast/use-toast'
 import { toTypedSchema } from '@vee-validate/zod';
 import * as z from 'zod';
-import api from '@/api.ts';
-import router from '@/router.ts';
+import api from '@/api';
+import router from '@/router';
+import { useAuthStore } from '@/stores/auth';
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
-
-// Import Select Components
 import {
   Select,
   SelectContent,
@@ -22,9 +21,10 @@ import {
 } from '@/components/ui/select'
 
 const { toast } = useToast()
+const authStore = useAuthStore()
 
 const formSchema = toTypedSchema(z.object({
-  email: z.string().email(),
+  email: z.string().email().toLowerCase(),
   password: z.string().min(6),
   password_confirmation: z.string().min(6),
   gender: z.enum(['Male', 'Female'], {
@@ -35,20 +35,24 @@ const formSchema = toTypedSchema(z.object({
   path: ["password_confirmation"],
 }));
 
-const { handleSubmit, error } = useForm({
+const { handleSubmit } = useForm({
   validationSchema: formSchema,
 });
 
 const onSubmit = handleSubmit(async (formValues) => {
-  console.log('Submitted values:', formValues);
   try {
     const response = await api.post('/api/register', formValues);
-    localStorage.setItem('token', response.data.token);
-    router.push('/');
+    authStore.setUser(response.data.user);
+    authStore.setToken(response.data.token);
+    toast({
+      title: 'Registration successful',
+      description: 'Please check your email to verify your account.',
+    });
+    router.push('/verify-email');
   } catch (error) {
     toast({
       title: 'Registration failed',
-      description: error.response.data.message || 'Registration failed',
+      description: error.response?.data?.message || 'Registration failed',
       variant: 'destructive',
     });
   }

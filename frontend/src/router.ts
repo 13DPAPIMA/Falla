@@ -1,9 +1,12 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
 import Welcome from '@/components/WelcomeView.vue';
 import Home from '@/components/HomeView.vue';
 import Register from '@/components/auth/Register.vue';
 import Login from '@/components/auth/Login.vue';
-import Profile from '@/components/profile/Profile.vue'
+import VerifyEmail from '@/components/auth/VerifyEmail.vue';
+import EmailVerificationHandler from '@/components/auth/EmailVerificationHandler.vue';
+import Profile from '@/components/profile/Profile.vue';
 import Wardrobe from '@/components/WardrobeView.vue';
 import NotFound from '@/components/NotFound.vue';
 import StylistPanel from '@/components/StylistPanel.vue';
@@ -33,6 +36,17 @@ const routes: Array<RouteRecordRaw> = [
         meta: { requiresGuest: true }
     },
     {
+        path: '/verify-email',
+        name: 'verifyEmail',
+        component: VerifyEmail,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/verify-email-handler',
+        name: 'verifyEmailHandler',
+        component: EmailVerificationHandler
+    },
+    {
         path: '/profile',
         name: 'profile',
         component: Profile,
@@ -44,18 +58,17 @@ const routes: Array<RouteRecordRaw> = [
         component: Wardrobe,
         meta: { requiresAuth: true }
     },
-    ,
     {
         path: '/stylist-panel',
-        name: 'Stylist Panel',
+        name: 'stylistPanel',
         component: StylistPanel,
         meta: { requiresAuth: true, role: 'stylist' }
     },
     {
         path: '/:pathMatch(.*)*',
-        name: 'NotFound',
-        component: NotFound,
-    },
+        name: 'notFound',
+        component: NotFound
+    }
 ];
 
 const router = createRouter({
@@ -63,26 +76,23 @@ const router = createRouter({
     routes,
 });
 
-router.beforeEach((to, from, next) => {
-    const token = localStorage.getItem('token');
-    const role = localStorage.getItem('role');
+router.beforeEach(async (to, from, next) => {
+    const authStore = useAuthStore();
+    const isAuthenticated = await authStore.checkAuth();
 
-    // If route requires authentication and user is not logged in
-    if (to.meta.requiresAuth && !token) {
-        return next({ name: 'login' }); // Redirect to login if not authenticated
+    if (to.meta.requiresAuth && !isAuthenticated) {
+        return next({ name: 'login' });
     }
 
-    // If route requires guest access and user is logged in
-    if (to.meta.requiresGuest && token) {
-        return next({ name: 'home' }); // Redirect logged-in users to the home page
+    if (to.meta.requiresGuest && isAuthenticated) {
+        return next({ name: 'home' });
     }
 
-    // If route requires a specific role and user doesn't have it
-    if (to.meta.role && to.meta.role !== role) {
-        return next({ name: 'NotFound' });
+    if (to.meta.role && to.meta.role !== authStore.user?.role) {
+        return next({ name: 'notFound' });
     }
 
-    next(); // Proceed to the route
+    next();
 });
 
 export default router;

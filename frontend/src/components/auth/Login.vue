@@ -3,14 +3,16 @@ import { useForm } from 'vee-validate';
 import { useToast } from '@/components/ui/toast/use-toast'
 import { toTypedSchema } from '@vee-validate/zod';
 import * as z from 'zod';
-import api from '@/api.ts';
-import router from '@/router.ts';
+import api from '@/api';
+import router from '@/router';
+import { useAuthStore } from '@/stores/auth';
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
 
 const { toast } = useToast()
+const authStore = useAuthStore()
 
 const formSchema = toTypedSchema(z.object({
   email: z.string().email(),
@@ -21,17 +23,17 @@ const { handleSubmit } = useForm({
   validationSchema: formSchema,
 });
 
-const getToken = async () => {
-  await api.get('/sanctum/csrf-cookie')
-}
-
 const onSubmit = handleSubmit(async (formValues) => {
   try {
-    await getToken();
     const response = await api.post('/api/login', formValues);
-    localStorage.setItem('token', response.data.token);
-    localStorage.setItem('role', response.data.user.role);
-    router.push('/');
+    authStore.setUser(response.data.user);
+    authStore.setToken(response.data.token);
+    if (!response.data.user.email_verified_at) {
+      router.push('/verify-email');
+      toast({ title: 'Verify Email', description: 'Please verify your email before continuing.', variant: 'destructive' });
+      return;
+    }
+    router.push('/home');
   } catch (error) {
     toast({
       title: 'Login failed',
