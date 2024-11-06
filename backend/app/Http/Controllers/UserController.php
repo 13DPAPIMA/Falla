@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function update(Request $request)
+    public function update(Request $request) // TODO: add email verification
     {
         $user = $request->user();
 
