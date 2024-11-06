@@ -19,13 +19,27 @@ class WardrobeService
         return WardrobeItem::with(['clothing.type', 'clothing.material', 'clothing.style'])->where('wardrobe_id', $wardrobeId)->get();
     }
 
-    public function getAvailableClothing($wardrobeId)
+    public function getAllClothingItems($gender)
     {
-        return Clothing::with(['type', 'material', 'style'])->whereNotIn('id', function ($query) use ($wardrobeId) {
-            $query->select('clothing_id')
-                ->from('wardrobe_items')
-                ->where('wardrobe_id', $wardrobeId);
-        })->get();
+        return Clothing::with(['type', 'material', 'style'])
+            ->where(function ($query) use ($gender) {
+                $query->where('gender', $gender)
+                    ->orWhere('gender', 'neutral');
+            })->get();
+    }
+
+    public function getAvailableClothing($wardrobeId, $gender)
+    {
+        return Clothing::with(['type', 'material', 'style'])
+            ->where(function ($query) use ($gender) {
+                $query->where('gender', $gender)
+                    ->orWhere('gender', 'neutral');
+            })
+            ->whereNotIn('id', function ($query) use ($wardrobeId) {
+                $query->select('clothing_id')
+                    ->from('wardrobe_items')
+                    ->where('wardrobe_id', $wardrobeId);
+            })->get();
     }
 
     public function addClothingToWardrobe($userId, $clothingId)
@@ -78,11 +92,6 @@ class WardrobeService
         $wardrobeItem->delete();
 
         return ['message' => 'Clothing item removed from wardrobe successfully', 'status' => 200];
-    }
-
-    public function getAllClothingItems()
-    {
-        return Clothing::with(['type', 'material', 'style'])->get();
     }
 
     public function getClothingItem($id)

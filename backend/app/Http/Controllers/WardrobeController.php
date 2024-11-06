@@ -35,17 +35,16 @@ class WardrobeController extends Controller
     /**
      * Show all available clothing options to choose from.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function availableClothing()
+    public function availableClothing(Request $request)
     {
-        $wardrobe = $this->wardrobeService->getUserWardrobe(auth()->id());
+        $user = $request->user();
+        $wardrobe = $this->wardrobeService->getUserWardrobe($user->id);
 
-        if ($wardrobe) {
-            $clothingItems = $this->wardrobeService->getAvailableClothing($wardrobe->id);
-        } else {
-            $clothingItems = $this->wardrobeService->getAllClothingItems();
-        }
+        $clothingItems = $wardrobe
+            ? $this->wardrobeService->getAvailableClothing($wardrobe->id, $user->gender)
+            : $this->wardrobeService->getAllClothingItems($user->gender);
 
         return response()->json($clothingItems, 200);
     }
