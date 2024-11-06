@@ -29,13 +29,13 @@
                           <CardTitle class="text-lg font-bold">{{ item.style }} {{ item.type }}</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div class="aspect-square relative mb-4 bg-gray-200 dark:bg-gray-700 rounded-md overflow-hidden">
-                            <div
-                                class="absolute inset-0 flex items-center justify-center text-4xl font-bold text-gray-400 dark:text-gray-600"
-                            >
+                          <div class="aspect-square relative mb-4 bg-gray-200 dark:bg-gray-700 rounded-md overflow-hidden flex items-center justify-center">
+                            <img v-if="item.photo" :src="item.photo" :alt="item.type" class="w-full h-full object-cover" />
+                            <div v-else class="text-4xl font-bold text-gray-400 dark:text-gray-600">
                               {{ item.type.charAt(0).toUpperCase() }}
                             </div>
                           </div>
+                          
                           <div class="grid grid-cols-2 gap-3">
                             <div class="flex items-center space-x-2">
                               <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Material:</span>
@@ -98,6 +98,7 @@ interface ClothingItem {
   material: string;
   color: string;
   water_resistant: number;
+  photo: string;
 }
 
 interface ClothingSuggestions {
