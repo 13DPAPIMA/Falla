@@ -7,6 +7,9 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
+use App\Http\Controllers\UserController;
+Route::middleware('auth:sanctum')->put('user', [UserController::class, 'update']);
+
 // weather and suggestion routes
 use App\Http\Controllers\WeatherController;
 use App\Http\Controllers\ClothingSuggestionsController;
