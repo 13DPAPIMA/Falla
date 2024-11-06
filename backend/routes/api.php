@@ -9,6 +9,7 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 
 use App\Http\Controllers\UserController;
 Route::middleware('auth:sanctum')->put('user', [UserController::class, 'update']);
+Route::middleware('auth:sanctum')->post('verify-password', [UserController::class, 'verifyPassword']);
 
 // weather and suggestion routes
 use App\Http\Controllers\WeatherController;

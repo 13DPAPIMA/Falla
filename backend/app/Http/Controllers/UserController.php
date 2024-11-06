@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -25,5 +26,20 @@ class UserController extends Controller
         $user->update($dataToUpdate);
 
         return $user;
+    }
+
+    public function verifyPassword(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        $user = $request->user();
+
+        if (Hash::check($request->password, $user->password)) {
+            return response()->json(['verified' => true]);
+        }
+
+        return response()->json(['verified' => false], 401);
     }
 }
