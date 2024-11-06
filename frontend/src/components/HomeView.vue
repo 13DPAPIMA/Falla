@@ -2,8 +2,10 @@
 import { ref, onMounted, computed } from 'vue'
 import api from '@/api'
 import { Separator } from '@/components/ui/separator'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import ClothingSuggestions from './ClothingSuggestions.vue'
-import { Cloud, CloudRainWind, Wind, Thermometer } from 'lucide-vue-next'
+import { Cloud, CloudRainWind, Wind, Thermometer, Loader } from 'lucide-vue-next'
 
 import HeaderNavBar from '@/components/HeaderNavBar.vue';
 
@@ -89,6 +91,17 @@ onMounted(() => {
     <HeaderNavBar></HeaderNavBar>
 
     <main class="max-w-3xl mx-auto p-6">
+
+      <div class="mb-6">
+        <div class="flex space-x-4">
+          <Input v-model="city" type="text" placeholder="Enter city" class="flex-grow" />
+          <Button @click="fetchWeather" :disabled="isLoading">
+            <Loader v-if="isLoading" class="mr-2 h-4 w-4 animate-spin" />
+            Get Weather
+          </Button>
+        </div>
+        <p v-if="errorMessage" class="mt-2 text-red-600">{{ errorMessage }}</p>
+      </div>
 
       <div v-if="weather" class="space-y-8">
         <div class="flex items-center justify-between">
