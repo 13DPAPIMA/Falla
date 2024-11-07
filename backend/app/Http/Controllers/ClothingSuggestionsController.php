@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Clothing;
+use DateTime;
 use Illuminate\Http\Request;
 
 class ClothingSuggestionsController extends Controller
@@ -20,20 +21,15 @@ class ClothingSuggestionsController extends Controller
         $gender = $validatedData['gender'] ?? 'neutral';
         $weatherList = $validatedData['weather']['list'];
 
-        // Шаг 1: Рассчитать среднюю температуру
         $averageTemp = $this->calculateAverageTemperature($weatherList);
 
-        // Шаг 2: Определить температурный диапазон
         $temperatureRangeId = $this->getTemperatureRangeId($averageTemp);
         $temperatureRangeText = $this->getTemperatureRangeText($temperatureRangeId);
 
-        // Шаг 3: Выявить погодные условия
         $weatherConditions = $this->getWeatherConditions($weatherList);
 
-        // Шаги 4 и 5: Выбрать подходящие элементы одежды
         $clothingItems = $this->getClothingItems($temperatureRangeId, $gender, $weatherConditions);
 
-        // Шаг 6: Сгенерировать предложения по одежде
         $clothingSuggestions = $this->generateClothingSuggestions($clothingItems);
 
         $responseData = [
@@ -52,7 +48,6 @@ class ClothingSuggestionsController extends Controller
         return response()->json($responseData);
     }
 
-    // Добавьте этот метод в контроллер
     private function allLayersAreEmpty($clothingSuggestions)
     {
         foreach ($clothingSuggestions as $layer => $items) {
@@ -65,10 +60,21 @@ class ClothingSuggestionsController extends Controller
 
     private function calculateAverageTemperature(array $weatherList)
     {
-        $temperatures = array_column(array_column($weatherList, 'main'), 'temp');
-        return array_sum($temperatures) / count($temperatures);
+        $currentDate = (new DateTime())->format('Y-m-d');
+        $todaysTemperatures = [];
+    
+        foreach ($weatherList as $forecast) {
+            if (strpos($forecast['dt_txt'], $currentDate) === 0) {
+                $hour = (int)substr($forecast['dt_txt'], 11, 2); // Извлекаем час
+                if ($hour >= 6 && $hour <= 18) { // Только дневные часы
+                    $todaysTemperatures[] = $forecast['main']['temp'];
+                }
+            }
+        }
+    
+        return empty($todaysTemperatures) ? 0 : array_sum($todaysTemperatures) / count($todaysTemperatures);
     }
-
+    
     private function getTemperatureRangeId($averageTemp)
     {
         if ($averageTemp < 0) {
@@ -98,15 +104,19 @@ class ClothingSuggestionsController extends Controller
     }
 
     private function getWeatherConditions(array $weatherList)
-    {
-        $conditions = [];
-        foreach ($weatherList as $forecast) {
-            foreach ($forecast['weather'] as $weather) {
-                $conditions[] = strtolower($weather['main']);
+{
+    $conditions = [];
+    foreach ($weatherList as $forecast) {
+        foreach ($forecast['weather'] as $weather) {
+            $condition = strtolower($weather['main']);
+            if (!in_array($condition, $conditions)) {
+                $conditions[] = $condition;
             }
         }
-        return array_unique($conditions);
     }
+    return $conditions;
+}
+
 
     private function getClothingItems($temperatureRangeId, $gender, $weatherConditions)
     {
