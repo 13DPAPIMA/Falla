@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import api from '@/api'
-import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import ClothingSuggestions from './ClothingSuggestions.vue'
-import { Cloud, CloudRainWind, Wind, Thermometer, Loader } from 'lucide-vue-next'
-
-import HeaderNavBar from '@/components/HeaderNavBar.vue';
+import { Cloud, CloudRainWind, Wind, Thermometer, Loader, ChevronDown } from 'lucide-vue-next'
+import HeaderNavBar from '@/components/HeaderNavBar.vue'
+import AskExpert from './AskExpert.vue'
 
 interface WeatherData {
   city: {
@@ -80,74 +79,96 @@ const fetchWeather = async () => {
   }
 }
 
+const scrollToSuggestions = () => {
+  const suggestionsElement = document.getElementById('clothing-suggestions')
+  if (suggestionsElement) {
+    suggestionsElement.scrollIntoView({ behavior: 'smooth' })
+  }
+}
+
 onMounted(() => {
   fetchWeather()
 })
 </script>
 
 <template>
-  <div class="min-h-screen p-6">
-
+  <div class="min-h-screen">
     <HeaderNavBar></HeaderNavBar>
 
-    <main class="max-w-3xl mx-auto p-6">
+    <main>
+      <section class="min-h-screen flex flex-col justify-center px-6">
+        <div class="max-w-4xl mx-auto w-full">
+          <div class="mb-12">
+            <div class="flex space-x-4">
+              <Input v-model="city" type="text" placeholder="Enter city" class="flex-grow text-lg" />
+              <Button @click="fetchWeather" :disabled="isLoading" class="text-lg py-3">
+                <Loader v-if="isLoading" class="mr-2 h-5 w-5 animate-spin" />
+                Get Weather
+              </Button>
+            </div>
+            <p v-if="errorMessage" class="mt-4 text-red-600 text-lg">{{ errorMessage }}</p>
+          </div>
 
-      <div class="mb-6">
-        <div class="flex space-x-4">
-          <Input v-model="city" type="text" placeholder="Enter city" class="flex-grow" />
-          <Button @click="fetchWeather" :disabled="isLoading">
-            <Loader v-if="isLoading" class="mr-2 h-4 w-4 animate-spin" />
-            Get Weather
-          </Button>
+          <div v-if="weather" class="space-y-12">
+            <div>
+              <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ weather.city.name }}, {{ weather.city.country }}</h1>
+              <p class="text-l text-gray-600 mb-8">{{ formatDate(todayForecast[0].dt_txt) }}</p>
+
+              <div class="flex items-center justify-between mb-12">
+                <div class="text-5xl font-bold text-gray-900">{{ Math.round(todayForecast[0].main.temp) }}°C</div>
+                <div class="text-l text-gray-600">Feels like {{ Math.round(todayForecast[0].main.feels_like) }}°C</div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-8 text-center">
+                <div>
+                  <CloudRainWind class="mx-auto h-16 w-16 text-blue-500 mb-4" />
+                  <p class="text-l font-medium text-gray-900">{{ todayForecast[0].main.humidity }}%</p>
+                  <p class="text-gray-600">Humidity</p>
+                </div>
+                <div>
+                  <Wind class="mx-auto h-16 w-16 text-blue-500 mb-4" />
+                  <p class="text-l font-medium text-gray-900">{{ todayForecast[0].wind.speed }} m/s</p>
+                  <p class="text-gray-600">Wind Speed</p>
+                </div>
+                <div>
+                  <Thermometer class="mx-auto h-16 w-16 text-blue-500 mb-4" />
+                  <p class="text-l font-medium text-gray-900">{{ Math.round(todayForecast[0].main.feels_like) }}°C</p>
+                  <p class="text-gray-600">Feels Like</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-else-if="!isLoading" class="text-center text-gray-600">
+            <Cloud class="mx-auto h-32 w-32 text-gray-400 mb-6" />
+            <p class="text-2xl">Enter a city to get weather information</p>
+          </div>
+
+          <div v-if="weather" class="mt-16 text-center">
+            <Button @click="scrollToSuggestions" variant="ghost" class="text-lg">
+              See Clothing Suggestions
+              <ChevronDown class="ml-2 h-6 w-6" />
+            </Button>
+          </div>
         </div>
-        <p v-if="errorMessage" class="mt-2 text-red-600">{{ errorMessage }}</p>
-      </div>
+      </section>
 
-      <div v-if="weather" class="space-y-8">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-2xl font-semibold text-gray-800">{{ weather.city.name }}, {{ weather.city.country }}</h2>
-            <p class="text-gray-600">{{ formatDate(todayForecast[0].dt_txt) }}</p>
-          </div>
-          <div class="text-right">
-            <p class="text-4xl font-bold text-gray-800">{{ Math.round(todayForecast[0].main.temp) }}°C</p>
-            <p class="text-gray-600">Feels like {{ Math.round(todayForecast[0].main.feels_like) }}°C</p>
-          </div>
+      <section id="clothing-suggestions" class="py-24 px-6">
+        <div class="max-w-4xl mx-auto">
+          <ClothingSuggestions v-if="weather" :weather="weather" />
         </div>
+      </section>
 
-        <div class="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <CloudRainWind class="mx-auto h-8 w-8 text-blue-500" />
-            <p class="mt-1 font-medium">{{ todayForecast[0].main.humidity }}%</p>
-            <p class="text-sm text-gray-600">Humidity</p>
-          </div>
-          <div>
-            <Wind class="mx-auto h-8 w-8 text-blue-500" />
-            <p class="mt-1 font-medium">{{ todayForecast[0].wind.speed }} m/s</p>
-            <p class="text-sm text-gray-600">Wind Speed</p>
-          </div>
-          <div>
-            <Thermometer class="mx-auto h-8 w-8 text-blue-500" />
-            <p class="mt-1 font-medium">{{ Math.round(todayForecast[0].main.feels_like) }}°C</p>
-            <p class="text-sm text-gray-600">Feels Like</p>
-          </div>
+      <section class="py-24 px-6">
+        <div class="max-w-4xl mx-auto">
+          <AskExpert />
         </div>
-      </div>
-
-      <div v-else-if="!isLoading" class="text-center text-gray-600">
-        <Cloud class="mx-auto h-16 w-16 text-gray-400" />
-        <p class="mt-2">Enter a city to get weather information</p>
-      </div>
-
-      <Separator class="my-6" />
-
-      <ClothingSuggestions v-if="weather" :weather="weather" />
+      </section>
     </main>
   </div>
 </template>
 
 <style scoped>
-
 img {
   margin-top: 20px;
   max-width: 300px;
@@ -158,5 +179,4 @@ img {
   width: 150px;
   height: auto;
 }
-
 </style>
