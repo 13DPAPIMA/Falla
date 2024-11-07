@@ -1,54 +1,132 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import HeaderNavBar from "@/components/HeaderNavbar.vue";
-// Placeholder for questions fetched from the backend
-const questions = ref([
-  { id: 1, user: 'User1', question: 'What should I wear to a wedding?', answer: '' },
-  { id: 2, user: 'User2', question: 'What color would suit me?', answer: '' },
-  { id: 3, user: 'User3', question: 'Is this jacket good for cold weather?', answer: '' }
-]);
-// Answer submission function
-const submitAnswer = (questionId, answer) => {
-  const questionIndex = questions.value.findIndex(q => q.id === questionId);
-  if (questionIndex !== -1) {
-    // Update the answer in the local state
-    questions.value[questionIndex].answer = answer;
-    // Here you can send the answer to your backend API
-    // Example:
-    // await fetch('/api/answer', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ id: questionId, answer })
-    // });
+import { useAuthStore } from '@/stores/auth'
+import api from '@/api'
+import HeaderNavBar from "@/components/HeaderNavbar.vue"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
+import { toast } from "@/components/ui/toast"
 
-    alert(`Answer submitted for question ${questionId}: ${answer}`);
+interface User {
+  id: number
+  email: string
+  role: string
+  gender: string
+}
+
+interface Question {
+  id: number
+  user_id: number
+  topic: string
+  description: string
+  created_at: string
+  updated_at: string
+  user: User
+  answer: string
+}
+
+const authStore = useAuthStore()
+const questions = ref<Question[]>([])
+const isLoading = ref(false)
+
+const fetchQuestions = async () => {
+  isLoading.value = true
+  try {
+    const response = await api.get('/api/questions')
+    questions.value = response.data.map((q: Question) => ({ ...q, answer: '' }))
+  } catch (error) {
+    console.error('Error fetching questions:', error)
+    toast({
+      title: "Error",
+      description: "Failed to fetch questions. Please try again.",
+      variant: "destructive",
+    })
+  } finally {
+    isLoading.value = false
   }
-};
+}
+
+const submitAnswer = async (questionId: number, answer: string) => {
+  if (!answer.trim()) {
+    toast({
+      title: "Error",
+      description: "Please enter an answer before submitting.",
+      variant: "destructive",
+    })
+    return
+  }
+
+  try {
+    await api.post('/api/answers', {
+      question_id: questionId,
+      content: answer.trim()
+    })
+    toast({
+      title: "Success",
+      description: "Answer submitted successfully.",
+    })
+    await fetchQuestions()
+  } catch (error) {
+    console.error('Error submitting answer:', error)
+    toast({
+      title: "Error",
+      description: "Failed to submit answer. Please try again.",
+      variant: "destructive",
+    })
+  }
+}
+
+onMounted(async () => {
+  const isAuthenticated = await authStore.checkAuth()
+  if (isAuthenticated) {
+    fetchQuestions()
+  } else {
+    // Redirect to login page or show a message
+    toast({
+      title: "Authentication Required",
+      description: "Please log in to view and answer questions.",
+      variant: "destructive",
+    })
+  }
+})
 </script>
 
 <template>
-  <HeaderNavBar></HeaderNavBar>
-
-  <div id="main" class="h-screen flex flex-col justify-start items-start p-8">
-    <!-- Display each question from the users -->
-    <div v-for="question in questions" :key="question.id" class="mb-6 w-full border-b pb-4">
-      <h3 class="font-semibold">{{ question.user }}'s question:</h3>
-      <p>{{ question.question }}</p>
-
-      <!-- Textarea for stylist to provide answer -->
-      <textarea v-model="question.answer"
-                class="min-h-[100px] min-w-[350px] border-black border-2 rounded text-top mt-2">
-      </textarea>
-
-      <!-- Button to submit the answer -->
-      <button @click="submitAnswer(question.id, question.answer)"
-              class="w-[75px] h-[35px] bg-zinc-500 text-white rounded mt-2 hover:bg-zinc-700 transition-colors">
-        Reply
-      </button>
-    </div>
+  <div class="min-h-screen bg-background">
+    <HeaderNavBar />
+    <main class="container mx-auto p-4 space-y-6">
+      <h1 class="text-3xl font-bold">Answer Questions</h1>
+      <div v-if="isLoading" class="text-center">
+        <p>Loading questions...</p>
+      </div>
+      <div v-else-if="questions.length === 0" class="text-center">
+        <p>No questions available at the moment.</p>
+      </div>
+      <div v-else class="space-y-4">
+        <Card v-for="question in questions" :key="question.id" class="w-full">
+          <CardHeader>
+            <CardTitle>Question from {{ question.user.email }}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <h3 class="font-semibold">{{ question.topic }}</h3>
+            <p class="mt-2">{{ question.description }}</p>
+            <div class="mt-2 text-sm text-gray-500">
+              Asked on: {{ new Date(question.created_at).toLocaleString() }}
+            </div>
+            <Textarea
+                v-model="question.answer"
+                placeholder="Type your answer here..."
+                class="mt-4"
+            />
+          </CardContent>
+          <CardFooter>
+            <Button @click="submitAnswer(question.id, question.answer)">
+              Submit Answer
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    </main>
   </div>
 </template>
-
-<style scoped>
-/* Custom styles if needed */
-</style>

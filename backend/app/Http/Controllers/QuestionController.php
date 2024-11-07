@@ -27,7 +27,7 @@ class QuestionController extends Controller
     // Read (all)
     public function index()
     {
-        $questions = Question::all();
+        $questions = Question::with('user')->get();
         return response()->json($questions);
     }
 
