@@ -163,6 +163,7 @@ class ClothingSuggestionsController extends Controller
                     'style' => $item->style->style ?? null,
                     'material' => $item->material->material ?? null,
                     'color' => $item->color ?? null,
+                    'gender' => $item->gender ?? null,
                     'water_resistant' => $item->water_resistant ?? null,
                     'photo' => $item->photo->photo_url ?? null,
                 ];
