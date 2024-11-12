@@ -32,7 +32,9 @@ const navigateTo = (route: string) => {
     <div class="container mx-auto px-4">
       <nav class="flex items-center justify-between h-16">
         <div class="flex items-center">
-          <a href="/" class="text-2xl font-bold text-primary">Falla</a>
+          <router-link to="/home">
+            <span class="text-2xl font-bold text-primary">Falla</span>
+          </router-link>
         </div>
         <div class="flex items-center space-x-4">
           <template v-if="isAuthenticated">
