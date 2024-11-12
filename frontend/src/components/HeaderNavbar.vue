@@ -28,7 +28,7 @@ const navigateTo = (route: string) => {
 </script>
 
 <template>
-  <header class="bg-background border-b">
+  <header class="fixed top-0 left-0 w-full bg-background border-b z-10">
     <div class="container mx-auto px-4">
       <nav class="flex items-center justify-between h-16">
         <div class="flex items-center">

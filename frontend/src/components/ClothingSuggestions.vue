@@ -1,5 +1,5 @@
 <template>
-  <div class="clothing-suggestions">
+  <div class="clothing-suggestions h-screen overflow-y-auto p-4">
     <h2 class="text-2xl font-bold mb-4">Clothing Suggestions</h2>
     <Alert v-if="error" variant="destructive" class="mb-4">
       <CircleAlert class="h-4 w-4" />
@@ -13,59 +13,58 @@
     </div>
     <div v-else-if="suggestions">
       <div v-if="suggestions.clothing_suggestions && typeof suggestions.clothing_suggestions === 'object'">
-        <div class="space-y-8">
-          <div v-for="(categoryItems, category) in suggestions.clothing_suggestions" :key="category">
+        <div class="grid grid-cols-2 gap-4">
+          <div v-for="(categoryItems, category) in suggestions.clothing_suggestions" :key="category" class="space-y-2">
             <div v-if="categoryItems && categoryItems.length > 0">
-              <h3 class="flex items-center space-x-2 text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">
-                <component :is="getLayerIcon(category)" class="h-6 w-6" />
+              <h3 class="flex items-center space-x-2 text-sm font-bold mb-2 text-gray-800 dark:text-gray-200">
+                <component :is="getLayerIcon(category)" class="h-4 w-4" />
                 <span class="capitalize">{{ category }}</span>
               </h3>
-              <Carousel class="w-full max-w-sm mx-auto" @init-api="(api) => setApi(category, api)">
-                <CarouselContent>
-                  <CarouselItem v-for="(item, index) in categoryItems" :key="index" class="basis-full">
-                    <div class="p-1">
-                      <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
-                        <CardHeader class="pb-2">
-                          <CardTitle class="text-lg font-bold">{{ item.style }} {{ item.type }}</CardTitle>
+              <div class="flex justify-center px-8">
+                <Carousel class="w-[275px]" @init-api="(api) => setApi(category, api)"> <!-- TODO: fix different arrow height -->
+                  <CarouselContent>
+                    <CarouselItem v-for="(item, index) in categoryItems" :key="index">
+                      <Card class="overflow-hidden transition-all duration-300 hover:shadow-lg">
+                        <CardHeader class="p-2">
+                          <CardTitle class="text-xs font-bold">{{ item.style }} {{ item.type }}</CardTitle>
                         </CardHeader>
-                        <CardContent>
-                          <div class="aspect-square relative mb-4 bg-gray-200 dark:bg-gray-700 rounded-md overflow-hidden flex items-center justify-center">
+                        <CardContent class="p-2">
+                          <div class="aspect-square relative mb-2 overflow-hidden flex items-center justify-center">
                             <img v-if="item.photo" :src="item.photo" :alt="item.type" class="w-full h-full object-cover" />
-                            <div v-else class="text-4xl font-bold text-gray-400 dark:text-gray-600">
+                            <div v-else class="text-2xl font-bold text-gray-400 dark:text-gray-600">
                               {{ item.type.charAt(0).toUpperCase() }}
                             </div>
                           </div>
-                          
-                          <div class="grid grid-cols-2 gap-3">
-                            <div class="flex items-center space-x-2">
-                              <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Material:</span>
-                              <span class="text-sm text-gray-800 dark:text-gray-200">{{ item.material }}</span>
+                          <div class="grid grid-cols-2 gap-1 text-[10px]">
+                            <div class="flex items-center space-x-1">
+                              <span class="font-medium text-gray-600 dark:text-gray-400">Material:</span>
+                              <span class="text-gray-800 dark:text-gray-200">{{ item.material }}</span>
                             </div>
-                            <div class="flex items-center space-x-2">
-                              <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Color:</span>
+                            <div class="flex items-center space-x-1">
+                              <span class="font-medium text-gray-600 dark:text-gray-400">Color:</span>
                               <div class="flex items-center">
                                 <div
-                                    class="w-4 h-4 rounded-full mr-1 border border-gray-300 dark:border-gray-600"
+                                    class="w-2 h-2 rounded-full mr-1 border border-gray-300 dark:border-gray-600"
                                     :style="{ backgroundColor: item.color }"
                                 ></div>
-                                <span class="text-sm capitalize text-gray-800 dark:text-gray-200">{{ item.color }}</span>
+                                <span class="capitalize text-gray-800 dark:text-gray-200">{{ item.color }}</span>
                               </div>
                             </div>
-                            <div v-if="item.water_resistant === 1" class="flex items-center space-x-2">
-                              <Droplet class="h-4 w-4 text-blue-500" />
-                              <span class="text-sm text-blue-500">Water Resistant</span>
+                            <div v-if="item.water_resistant === 1" class="flex items-center space-x-1 col-span-2">
+                              <Droplet class="h-2 w-2 text-blue-500" />
+                              <span class="text-blue-500">Water Resistant</span>
                             </div>
                           </div>
                         </CardContent>
                       </Card>
-                    </div>
-                  </CarouselItem>
-                </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext />
-              </Carousel>
-              <div class="py-2 text-center text-sm text-muted-foreground">
-                Slide {{ carouselStates[category]?.current || 1 }} of {{ carouselStates[category]?.total || categoryItems.length }}
+                    </CarouselItem>
+                  </CarouselContent>
+                  <CarouselPrevious class="h-6 w-6" />
+                  <CarouselNext class="h-6 w-6" />
+                </Carousel>
+              </div>
+              <div class="text-center text-[10px] text-muted-foreground mt-1">
+                {{ carouselStates[category]?.current || 1 }} / {{ carouselStates[category]?.total || categoryItems.length }}
               </div>
             </div>
           </div>
@@ -86,9 +85,8 @@ import { ref, watch, onMounted, reactive } from 'vue'
 import api from '@/api'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { CircleAlert, Loader, Droplet, Shirt, Layers } from 'lucide-vue-next'
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel'
+import { CircleAlert, Loader, Droplet, Layers } from 'lucide-vue-next'
+import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel'
 import type { CarouselApi } from '@/components/ui/carousel'
 
 // Interfaces for TypeScript
@@ -169,18 +167,7 @@ const setApi = (category: string, api: CarouselApi) => {
 
 // Function to get the appropriate layer icon based on category
 const getLayerIcon = (category: string) => {
-  switch (category.toLowerCase()) {
-    case 'base':
-      return Layers
-    case 'mid':
-      return Layers
-    case 'outer':
-      return Layers
-    case 'pants':
-      return Layers
-    default:
-      return Layers
-  }
+  return Layers
 }
 
 // Fetch clothing suggestions on component mount
