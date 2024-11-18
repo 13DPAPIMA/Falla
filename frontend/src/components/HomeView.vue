@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import ClothingSuggestions from './ClothingSuggestions.vue'
 import { Cloud, CloudRainWind, Wind, Thermometer, Loader, ChevronDown } from 'lucide-vue-next'
 import HeaderNavBar from '@/components/HeaderNavBar.vue'
-import AskExpert from './AskExpert.vue'
+import AskExpert from '@/components/AskExpert.vue'
 
 interface WeatherData {
   city: {
