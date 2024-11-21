@@ -8,13 +8,23 @@
     </div>
 
     <div v-else>
-      <FilterBar
-          :types="allTypes"
-          :styles="allStyles"
-          :materials="allMaterials"
-          :colors="allColors"
-          @update:filters="updateFilters"
-      />
+      <div ref="filterBarContainer" class="mb-6">
+        <FilterBar
+            ref="filterBar"
+            :types="allTypes"
+            :styles="allStyles"
+            :materials="allMaterials"
+            :colors="allColors"
+            @update:filters="updateFilters"
+            :class="[
+            { 'fixed top-[60px] left-0 right-0 z-10 shadow-md bg-background': isFilterBarSticky },
+            isFilterBarSticky ? 'px-4 py-2' : 'mb-6',
+            'container mx-auto'
+          ]"
+            :style="isFilterBarSticky ? { width: contentWidth } : {}"
+        />
+        <div v-if="isFilterBarSticky" :style="{ height: filterBarHeight + 'px' }"></div>
+      </div>
 
       <div class="mb-8">
         <h2 class="text-2xl font-semibold mb-4">My Clothing</h2>
@@ -81,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { Loader2Icon } from 'lucide-vue-next'
 import ClothingCard from './ClothingCard.vue'
@@ -121,6 +131,10 @@ const availableClothing = ref<ClothingItem[]>([])
 const error = ref<string | null>(null)
 const loading = ref(true)
 const availableSection = ref<HTMLElement | null>(null)
+const filterBarContainer = ref<HTMLElement | null>(null)
+const filterBar = ref<InstanceType<typeof FilterBar> | null>(null)
+const isFilterBarSticky = ref(false)
+const filterBarHeight = ref(0)
 
 const filters = ref({
   search: '',
@@ -187,10 +201,30 @@ function itemMatchesFilters(item: ClothingItem, filters: { search: string, type:
   )
 }
 
+const contentWidth = computed(() => {
+  return filterBarContainer.value ? `${filterBarContainer.value.offsetWidth}px` : 'auto'
+})
+
 onMounted(async () => {
   await fetchWardrobe()
   await fetchAvailableClothing()
   loading.value = false
+
+  nextTick(() => {
+    const observer = new IntersectionObserver(
+        ([entry]) => {
+          isFilterBarSticky.value = !entry.isIntersecting
+        },
+        { threshold: [1], rootMargin: "-60px 0px 0px 0px" }
+    )
+
+    if (filterBarContainer.value) {
+      observer.observe(filterBarContainer.value)
+    }
+    if (filterBar.value?.$el) {
+      filterBarHeight.value = filterBar.value.$el.offsetHeight
+    }
+  })
 })
 
 async function fetchWardrobe() {
