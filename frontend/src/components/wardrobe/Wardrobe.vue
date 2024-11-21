@@ -10,12 +10,11 @@
     <div v-else>
       <div ref="filterBarContainer" class="mb-6">
         <FilterBar
-            ref="filterBar"
+            v-model="filters"
             :types="allTypes"
             :styles="allStyles"
             :materials="allMaterials"
             :colors="allColors"
-            @update:filters="updateFilters"
             :class="[
             { 'fixed top-[60px] left-0 right-0 z-10 shadow-md bg-background': isFilterBarSticky },
             isFilterBarSticky ? 'px-4 py-2' : 'mb-6',
@@ -54,6 +53,7 @@
               :item="item.clothing"
               :is-in-wardrobe="true"
               @remove="removeFromWardrobe"
+              v-memo="[item.id, item.clothing, filters]"
           />
         </TransitionGroup>
       </div>
@@ -78,6 +78,7 @@
               :item="item"
               :is-in-wardrobe="false"
               @add="addToWardrobe"
+              v-memo="[item.id, filters]"
           />
         </TransitionGroup>
       </div>
@@ -186,19 +187,22 @@ const filteredAvailableClothing = computed(() => {
 })
 
 function itemMatchesFilters(item: ClothingItem, filters: { search: string, type: string | null, style: string | null, material: string | null, color: string | null }): boolean {
-  const searchLower = filters.search.toLowerCase()
-  return (
-      (!filters.search ||
-          item.type.type.toLowerCase().includes(searchLower) ||
-          item.material.material.toLowerCase().includes(searchLower) ||
-          item.style.style.toLowerCase().includes(searchLower) ||
-          item.color.toLowerCase().includes(searchLower)
-      ) &&
-      (!filters.type || item.type.type === filters.type) &&
-      (!filters.style || item.style.style === filters.style) &&
-      (!filters.material || item.material.material === filters.material) &&
-      (!filters.color || item.color === filters.color)
-  )
+  if (filters.type && item.type.type !== filters.type) return false
+  if (filters.style && item.style.style !== filters.style) return false
+  if (filters.material && item.material.material !== filters.material) return false
+  if (filters.color && item.color !== filters.color) return false
+
+  if (filters.search) {
+    const searchLower = filters.search.toLowerCase()
+    return (
+        item.type.type.toLowerCase().includes(searchLower) ||
+        item.material.material.toLowerCase().includes(searchLower) ||
+        item.style.style.toLowerCase().includes(searchLower) ||
+        item.color.toLowerCase().includes(searchLower)
+    )
+  }
+
+  return true
 }
 
 const contentWidth = computed(() => {
@@ -249,8 +253,17 @@ async function fetchAvailableClothing() {
 
 async function addToWardrobe(clothingId: number) {
   try {
-    await api.post('api/wardrobe', { clothing_id: clothingId })
-    await fetchWardrobe()
+    const response = await api.post('api/wardrobe', { clothing_id: clothingId })
+    const newItem = response.data
+    const clothingItem = availableClothing.value.find(item => item.id === clothingId)
+
+    if (newItem && clothingItem) {
+      wardrobe.value.unshift({
+        ...newItem,
+        clothing: clothingItem
+      })
+      availableClothing.value = availableClothing.value.filter(item => item.id !== clothingId)
+    }
   } catch (err: any) {
     console.error('Error adding clothing to wardrobe:', err)
     error.value = 'Failed to add clothing. Please try again.'
@@ -260,15 +273,16 @@ async function addToWardrobe(clothingId: number) {
 async function removeFromWardrobe(itemId: number) {
   try {
     await api.delete(`api/wardrobe/${itemId}`)
-    await fetchWardrobe()
+    const removedItem = wardrobe.value.find(item => item.id === itemId)
+
+    if (removedItem) {
+      wardrobe.value = wardrobe.value.filter(item => item.id !== itemId)
+      availableClothing.value.push(removedItem.clothing)
+    }
   } catch (err: any) {
     console.error('Error removing clothing from wardrobe:', err)
     error.value = 'Failed to remove clothing. Please try again.'
   }
-}
-
-function updateFilters(newFilters: { search: string, type: string | null, style: string | null, material: string | null, color: string | null }) {
-  filters.value = newFilters
 }
 
 function resetFilters() {
@@ -299,3 +313,4 @@ function scrollToAvailable() {
   transform: translateY(30px);
 }
 </style>
+
