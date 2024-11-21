@@ -3,11 +3,22 @@
     <div class="flex-grow">
       <Input
           v-model="searchQuery"
-          placeholder="Search by clothing type..."
+          placeholder="Search clothing..."
           class="w-full"
           @input="onSearchInput"
       />
     </div>
+    <Select v-model="selectedType" @update:modelValue="updateFilters">
+      <SelectTrigger class="w-[120px]">
+        <SelectValue/>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem :value="null">All Types</SelectItem>
+        <SelectItem v-for="type in types" :key="type" :value="type">
+          {{ type }}
+        </SelectItem>
+      </SelectContent>
+    </Select>
     <Select v-model="selectedStyle" @update:modelValue="updateFilters">
       <SelectTrigger class="w-[120px]">
         <SelectValue/>
@@ -56,15 +67,17 @@ import { Button } from '@/components/ui/button'
 import { RefreshCcw } from 'lucide-vue-next'
 
 const props = defineProps<{
+  types: string[]
   styles: string[]
   materials: string[]
   colors: string[]
 }>()
 
 const emit = defineEmits<{
-  (e: 'update:filters', filters: { style: string | null; material: string | null; color: string | null; search: string }): void
+  (e: 'update:filters', filters: { type: string | null; style: string | null; material: string | null; color: string | null; search: string }): void
 }>()
 
+const selectedType = ref<string | null>(null)
 const selectedStyle = ref<string | null>(null)
 const selectedMaterial = ref<string | null>(null)
 const selectedColor = ref<string | null>(null)
@@ -77,6 +90,7 @@ function onSearchInput(event: Event) {
 
 function updateFilters() {
   emit('update:filters', {
+    type: selectedType.value,
     style: selectedStyle.value,
     material: selectedMaterial.value,
     color: selectedColor.value,
@@ -85,12 +99,17 @@ function updateFilters() {
 }
 
 function resetFilters() {
+  selectedType.value = null
   selectedStyle.value = null
   selectedMaterial.value = null
   selectedColor.value = null
   searchQuery.value = ''
   updateFilters()
 }
+
+watch(() => props.types, () => {
+  resetFilters()
+})
 
 watch(() => props.styles, () => {
   resetFilters()

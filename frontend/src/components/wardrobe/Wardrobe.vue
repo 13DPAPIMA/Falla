@@ -9,6 +9,7 @@
 
     <div v-else>
       <FilterBar
+          :types="allTypes"
           :styles="allStyles"
           :materials="allMaterials"
           :colors="allColors"
@@ -123,9 +124,17 @@ const availableSection = ref<HTMLElement | null>(null)
 
 const filters = ref({
   search: '',
+  type: null as string | null,
   style: null as string | null,
   material: null as string | null,
   color: null as string | null
+})
+
+const allTypes = computed(() => {
+  const types = new Set<string>()
+  wardrobe.value.forEach(item => types.add(item.clothing.type.type))
+  availableClothing.value.forEach(item => types.add(item.type.type))
+  return Array.from(types)
 })
 
 const allStyles = computed(() => {
@@ -162,7 +171,7 @@ const filteredAvailableClothing = computed(() => {
   )
 })
 
-function itemMatchesFilters(item: ClothingItem, filters: { search: string, style: string | null, material: string | null, color: string | null }): boolean {
+function itemMatchesFilters(item: ClothingItem, filters: { search: string, type: string | null, style: string | null, material: string | null, color: string | null }): boolean {
   const searchLower = filters.search.toLowerCase()
   return (
       (!filters.search ||
@@ -171,6 +180,7 @@ function itemMatchesFilters(item: ClothingItem, filters: { search: string, style
           item.style.style.toLowerCase().includes(searchLower) ||
           item.color.toLowerCase().includes(searchLower)
       ) &&
+      (!filters.type || item.type.type === filters.type) &&
       (!filters.style || item.style.style === filters.style) &&
       (!filters.material || item.material.material === filters.material) &&
       (!filters.color || item.color === filters.color)
@@ -223,13 +233,14 @@ async function removeFromWardrobe(itemId: number) {
   }
 }
 
-function updateFilters(newFilters: { search: string, style: string | null, material: string | null, color: string | null }) {
+function updateFilters(newFilters: { search: string, type: string | null, style: string | null, material: string | null, color: string | null }) {
   filters.value = newFilters
 }
 
 function resetFilters() {
   filters.value = {
     search: '',
+    type: null,
     style: null,
     material: null,
     color: null
@@ -242,3 +253,15 @@ function scrollToAvailable() {
   }
 }
 </script>
+
+<style scoped>
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.5s ease;
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateY(30px);
+}
+</style>
