@@ -2,68 +2,76 @@
   <div class="container mx-auto p-4">
     <h1 class="text-3xl font-bold mb-6 text-primary">My Wardrobe</h1>
 
-    <Tabs v-model="activeTab" class="w-full mb-6">
-      <TabsList class="w-full mb-6">
-        <TabsTrigger value="wardrobe" class="flex-1 text-xl">My Wardrobe</TabsTrigger>
-        <TabsTrigger value="available" class="flex-1 text-xl">Available Clothing</TabsTrigger>
-      </TabsList>
-      <TabsContent value="wardrobe">
-        <FilterBar
-            :styles="allStyles"
-            @update:filters="updateFilters"
-        />
+    <div v-if="loading" class="text-center">
+      <Loader2Icon class="animate-spin h-8 w-8 mx-auto" />
+      <p>Loading your wardrobe...</p>
+    </div>
+
+    <div v-else>
+      <FilterBar
+          :types="allTypes"
+          :styles="allStyles"
+          @update:filters="updateFilters"
+      />
+
+      <div class="mb-8">
+        <h2 class="text-2xl font-semibold mb-4">My Clothing</h2>
         <TransitionGroup
             name="list"
             tag="div"
             class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
         >
-          <div v-if="filteredWardrobe.length === 0" key="empty" class="col-span-full">
+          <template v-if="filteredWardrobe.length === 0">
             <EmptyState
-                icon="Hanger"
-                :title="wardrobe.length === 0 ? 'Your wardrobe is empty' : 'No items match the current filters'"
-                :description="wardrobe.length === 0 ? 'Add some clothes to get started!' : 'Try adjusting your filters'"
+                v-if="wardrobe.length === 0"
+                key="empty-wardrobe"
+                type="empty-wardrobe"
+                @action="scrollToAvailable"
             />
-          </div>
-          <ClothingItem
+            <EmptyState
+                v-else
+                key="no-results-wardrobe"
+                type="no-results"
+                @action="resetFilters"
+            />
+          </template>
+          <ClothingCard
               v-else
               v-for="item in filteredWardrobe"
               :key="item.id"
               :item="item.clothing"
-              :is-available="false"
-              @remove="removeFromWardrobe(item.clothing.id)"
+              :is-in-wardrobe="true"
+              @remove="removeFromWardrobe"
           />
         </TransitionGroup>
-      </TabsContent>
-      <TabsContent value="available">
-        <FilterBar
-            :styles="allStyles"
-            @update:filters="updateFilters"
-        />
+      </div>
+
+      <div ref="availableSection">
+        <h2 class="text-2xl font-semibold mb-4">Suggested Clothing</h2>
         <TransitionGroup
             name="list"
             tag="div"
             class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
         >
-          <div v-if="filteredAvailableClothing.length === 0" key="empty" class="col-span-full">
-            <EmptyState
-                icon="ShoppingBag"
-                :title="availableClothing.length === 0 ? 'No available clothing' : 'No items match the current filters'"
-                :description="availableClothing.length === 0 ? 'Check back later for new arrivals!' : 'Try adjusting your filters'"
-            />
-          </div>
-          <ClothingItem
+          <EmptyState
+              v-if="filteredAvailableClothing.length === 0"
+              key="no-results-available"
+              type="no-results"
+              @action="resetFilters"
+          />
+          <ClothingCard
               v-else
               v-for="item in filteredAvailableClothing"
               :key="item.id"
               :item="item"
-              :is-available="true"
-              @add="addToWardrobe(item.id)"
+              :is-in-wardrobe="false"
+              @add="addToWardrobe"
           />
         </TransitionGroup>
-      </TabsContent>
-    </Tabs>
+      </div>
+    </div>
 
-    <Alert v-if="error" variant="destructive">
+    <Alert v-if="error" variant="destructive" class="mt-4">
       <AlertTitle>Error</AlertTitle>
       <AlertDescription>{{ error }}</AlertDescription>
     </Alert>
@@ -72,12 +80,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
-import ClothingItem from '@/components/wardrobe/ClothingItem.vue'
-import EmptyState from '@/components/wardrobe/EmptyState.vue'
-import FilterBar from '@/components/wardrobe/FilterBar.vue'
-import api from '@/api.ts'
+import { Loader2Icon } from 'lucide-vue-next'
+import ClothingCard from './ClothingCard.vue'
+import EmptyState from './EmptyState.vue'
+import FilterBar from './FilterBar.vue'
+import api from '@/api'
 
 interface WardrobeItem {
   id: number
@@ -103,16 +111,27 @@ interface ClothingItem {
   type: { id: number; type: string }
   material: { id: number; material: string }
   style: { id: number; style: string }
+  photo?: { id: number; photo_url: string }
 }
 
 const wardrobe = ref<WardrobeItem[]>([])
 const availableClothing = ref<ClothingItem[]>([])
 const error = ref<string | null>(null)
-const activeTab = ref('wardrobe')
+const loading = ref(true)
+const availableSection = ref<HTMLElement | null>(null)
 
 const filters = ref({
-  style: null as string | null,
-  search: ''
+  search: '',
+  type: '',
+  style: '',
+  gender: ''
+})
+
+const allTypes = computed(() => {
+  const types = new Set<string>()
+  wardrobe.value.forEach(item => types.add(item.clothing.type.type))
+  availableClothing.value.forEach(item => types.add(item.type.type))
+  return Array.from(types)
 })
 
 const allStyles = computed(() => {
@@ -124,47 +143,41 @@ const allStyles = computed(() => {
 
 const filteredWardrobe = computed(() => {
   return wardrobe.value.filter(item =>
-      (!filters.value.style || item.clothing.style.style === filters.value.style) &&
-      (!filters.value.search || itemMatchesSearch(item.clothing, filters.value.search))
+      itemMatchesFilters(item.clothing, filters.value)
   )
 })
 
 const filteredAvailableClothing = computed(() => {
   return availableClothing.value.filter(item =>
-      (!filters.value.style || item.style.style === filters.value.style) &&
-      (!filters.value.search || itemMatchesSearch(item, filters.value.search))
+      itemMatchesFilters(item, filters.value) &&
+      !wardrobe.value.some(wardrobeItem => wardrobeItem.clothing_id === item.id)
   )
 })
 
-function itemMatchesSearch(item: ClothingItem, search: string): boolean {
-  const searchLower = search.toLowerCase()
-  return item.type.type.toLowerCase().includes(searchLower)
+function itemMatchesFilters(item: ClothingItem, filters: { search: string, type: string, style: string, gender: string }): boolean {
+  const searchLower = filters.search.toLowerCase()
+  return (
+      (!filters.search ||
+          item.type.type.toLowerCase().includes(searchLower) ||
+          item.material.material.toLowerCase().includes(searchLower) ||
+          item.style.style.toLowerCase().includes(searchLower) ||
+          item.color.toLowerCase().includes(searchLower)
+      ) &&
+      (!filters.type || item.type.type === filters.type) &&
+      (!filters.style || item.style.style === filters.style) &&
+      (!filters.gender || item.gender === filters.gender)
+  )
 }
 
 onMounted(async () => {
   await fetchWardrobe()
   await fetchAvailableClothing()
+  loading.value = false
 })
-
-async function getWardrobe() {
-  return api.get('api/wardrobe')
-}
-
-async function getAvailableClothing() {
-  return api.get('api/available-clothing')
-}
-
-async function addClothingToWardrobe(clothingId: number) {
-  return api.post('api/wardrobe', { clothing_id: clothingId })
-}
-
-async function removeClothingFromWardrobe(wardrobeId: number) {
-  return api.delete(`api/wardrobe/${wardrobeId}`)
-}
 
 async function fetchWardrobe() {
   try {
-    const response = await getWardrobe()
+    const response = await api.get('api/wardrobe')
     wardrobe.value = response.data
   } catch (err: any) {
     console.error('Error fetching wardrobe:', err)
@@ -174,7 +187,7 @@ async function fetchWardrobe() {
 
 async function fetchAvailableClothing() {
   try {
-    const response = await getAvailableClothing()
+    const response = await api.get('api/available-clothing')
     availableClothing.value = response.data
   } catch (err: any) {
     console.error('Error fetching available clothing:', err)
@@ -184,9 +197,8 @@ async function fetchAvailableClothing() {
 
 async function addToWardrobe(clothingId: number) {
   try {
-    await addClothingToWardrobe(clothingId)
+    await api.post('api/wardrobe', { clothing_id: clothingId })
     await fetchWardrobe()
-    await fetchAvailableClothing()
   } catch (err: any) {
     console.error('Error adding clothing to wardrobe:', err)
     error.value = 'Failed to add clothing. Please try again.'
@@ -195,17 +207,31 @@ async function addToWardrobe(clothingId: number) {
 
 async function removeFromWardrobe(itemId: number) {
   try {
-    await removeClothingFromWardrobe(itemId)
+    await api.delete(`api/wardrobe/${itemId}`)
     await fetchWardrobe()
-    await fetchAvailableClothing()
   } catch (err: any) {
     console.error('Error removing clothing from wardrobe:', err)
     error.value = 'Failed to remove clothing. Please try again.'
   }
 }
 
-function updateFilters(newFilters: { style: string | null; search: string }) {
+function updateFilters(newFilters: { search: string, type: string, style: string, gender: string }) {
   filters.value = newFilters
+}
+
+function resetFilters() {
+  filters.value = {
+    search: '',
+    type: '',
+    style: '',
+    gender: ''
+  }
+}
+
+function scrollToAvailable() {
+  if (availableSection.value) {
+    availableSection.value.scrollIntoView({ behavior: 'smooth' })
+  }
 }
 </script>
 

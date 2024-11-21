@@ -16,12 +16,12 @@ class WardrobeService
 
     public function getWardrobeItems($wardrobeId)
     {
-        return WardrobeItem::with(['clothing.type', 'clothing.material', 'clothing.style'])->where('wardrobe_id', $wardrobeId)->get();
+        return WardrobeItem::with(['clothing.type', 'clothing.material', 'clothing.style', 'clothing.photo'])->where('wardrobe_id', $wardrobeId)->get();
     }
 
     public function getAllClothingItems($gender)
     {
-        return Clothing::with(['type', 'material', 'style'])
+        return Clothing::with(['type', 'material', 'style', 'photo'])
             ->where(function ($query) use ($gender) {
                 $query->where('gender', $gender)
                     ->orWhere('gender', 'neutral');
@@ -30,7 +30,7 @@ class WardrobeService
 
     public function getAvailableClothing($wardrobeId, $gender)
     {
-        return Clothing::with(['type', 'material', 'style'])
+        return Clothing::with(['type', 'material', 'style', 'photo'])
             ->where(function ($query) use ($gender) {
                 $query->where('gender', $gender)
                     ->orWhere('gender', 'neutral');
@@ -66,7 +66,7 @@ class WardrobeService
             'clothing_id' => $clothingId,
         ]);
 
-        $wardrobeItem->load(['clothing.type', 'clothing.material', 'clothing.style']);
+        $wardrobeItem->load(['clothing.type', 'clothing.material', 'clothing.style', 'clothing.photo']);
 
         return ['data' => $wardrobeItem, 'status' => 201];
     }
@@ -96,6 +96,6 @@ class WardrobeService
 
     public function getClothingItem($id)
     {
-        return Clothing::with(['type', 'material', 'style'])->find($id);
+        return Clothing::with(['type', 'material', 'style', 'photo'])->find($id);
     }
 }
