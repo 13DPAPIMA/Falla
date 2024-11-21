@@ -9,8 +9,8 @@
       />
     </div>
     <Select v-model="selectedStyle" @update:modelValue="updateFilters">
-      <SelectTrigger class="w-[180px]">
-        <SelectValue placeholder="Select Style" />
+      <SelectTrigger class="w-[120px]">
+        <SelectValue/>
       </SelectTrigger>
       <SelectContent>
         <SelectItem :value="null">All Styles</SelectItem>
@@ -20,13 +20,24 @@
       </SelectContent>
     </Select>
     <Select v-model="selectedMaterial" @update:modelValue="updateFilters">
-      <SelectTrigger class="w-[180px]">
-        <SelectValue placeholder="Select Material" />
+      <SelectTrigger class="w-[120px]">
+        <SelectValue/>
       </SelectTrigger>
       <SelectContent>
         <SelectItem :value="null">All Materials</SelectItem>
         <SelectItem v-for="material in materials" :key="material" :value="material">
           {{ material }}
+        </SelectItem>
+      </SelectContent>
+    </Select>
+    <Select v-model="selectedColor" @update:modelValue="updateFilters">
+      <SelectTrigger class="w-[120px]">
+        <SelectValue/>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem :value="null">All Colors</SelectItem>
+        <SelectItem v-for="color in colors" :key="color" :value="color">
+          {{ color }}
         </SelectItem>
       </SelectContent>
     </Select>
@@ -47,14 +58,16 @@ import { RefreshCcw } from 'lucide-vue-next'
 const props = defineProps<{
   styles: string[]
   materials: string[]
+  colors: string[]
 }>()
 
 const emit = defineEmits<{
-  (e: 'update:filters', filters: { style: string | null; material: string | null; search: string }): void
+  (e: 'update:filters', filters: { style: string | null; material: string | null; color: string | null; search: string }): void
 }>()
 
 const selectedStyle = ref<string | null>(null)
 const selectedMaterial = ref<string | null>(null)
+const selectedColor = ref<string | null>(null)
 const searchQuery = ref('')
 
 function onSearchInput(event: Event) {
@@ -66,6 +79,7 @@ function updateFilters() {
   emit('update:filters', {
     style: selectedStyle.value,
     material: selectedMaterial.value,
+    color: selectedColor.value,
     search: searchQuery.value
   })
 }
@@ -73,6 +87,7 @@ function updateFilters() {
 function resetFilters() {
   selectedStyle.value = null
   selectedMaterial.value = null
+  selectedColor.value = null
   searchQuery.value = ''
   updateFilters()
 }
@@ -82,6 +97,10 @@ watch(() => props.styles, () => {
 })
 
 watch(() => props.materials, () => {
+  resetFilters()
+})
+
+watch(() => props.colors, () => {
   resetFilters()
 })
 </script>

@@ -11,6 +11,7 @@
       <FilterBar
           :styles="allStyles"
           :materials="allMaterials"
+          :colors="allColors"
           @update:filters="updateFilters"
       />
 
@@ -123,7 +124,8 @@ const availableSection = ref<HTMLElement | null>(null)
 const filters = ref({
   search: '',
   style: null as string | null,
-  material: null as string | null
+  material: null as string | null,
+  color: null as string | null
 })
 
 const allStyles = computed(() => {
@@ -140,6 +142,13 @@ const allMaterials = computed(() => {
   return Array.from(materials)
 })
 
+const allColors = computed(() => {
+  const colors = new Set<string>()
+  wardrobe.value.forEach(item => colors.add(item.clothing.color))
+  availableClothing.value.forEach(item => colors.add(item.color))
+  return Array.from(colors)
+})
+
 const filteredWardrobe = computed(() => {
   return wardrobe.value.filter(item =>
       itemMatchesFilters(item.clothing, filters.value)
@@ -153,7 +162,7 @@ const filteredAvailableClothing = computed(() => {
   )
 })
 
-function itemMatchesFilters(item: ClothingItem, filters: { search: string, style: string | null, material: string | null }): boolean {
+function itemMatchesFilters(item: ClothingItem, filters: { search: string, style: string | null, material: string | null, color: string | null }): boolean {
   const searchLower = filters.search.toLowerCase()
   return (
       (!filters.search ||
@@ -163,7 +172,8 @@ function itemMatchesFilters(item: ClothingItem, filters: { search: string, style
           item.color.toLowerCase().includes(searchLower)
       ) &&
       (!filters.style || item.style.style === filters.style) &&
-      (!filters.material || item.material.material === filters.material)
+      (!filters.material || item.material.material === filters.material) &&
+      (!filters.color || item.color === filters.color)
   )
 }
 
@@ -213,7 +223,7 @@ async function removeFromWardrobe(itemId: number) {
   }
 }
 
-function updateFilters(newFilters: { search: string, style: string | null, material: string | null }) {
+function updateFilters(newFilters: { search: string, style: string | null, material: string | null, color: string | null }) {
   filters.value = newFilters
 }
 
@@ -221,7 +231,8 @@ function resetFilters() {
   filters.value = {
     search: '',
     style: null,
-    material: null
+    material: null,
+    color: null
   }
 }
 
@@ -231,15 +242,3 @@ function scrollToAvailable() {
   }
 }
 </script>
-
-<style scoped>
-.list-enter-active,
-.list-leave-active {
-  transition: all 0.5s ease;
-}
-.list-enter-from,
-.list-leave-to {
-  opacity: 0;
-  transform: translateY(30px);
-}
-</style>
