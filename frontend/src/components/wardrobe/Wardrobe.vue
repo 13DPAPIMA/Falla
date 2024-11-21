@@ -10,6 +10,7 @@
     <div v-else>
       <FilterBar
           :styles="allStyles"
+          :materials="allMaterials"
           @update:filters="updateFilters"
       />
 
@@ -121,7 +122,8 @@ const availableSection = ref<HTMLElement | null>(null)
 
 const filters = ref({
   search: '',
-  style: null as string | null
+  style: null as string | null,
+  material: null as string | null
 })
 
 const allStyles = computed(() => {
@@ -129,6 +131,13 @@ const allStyles = computed(() => {
   wardrobe.value.forEach(item => styles.add(item.clothing.style.style))
   availableClothing.value.forEach(item => styles.add(item.style.style))
   return Array.from(styles)
+})
+
+const allMaterials = computed(() => {
+  const materials = new Set<string>()
+  wardrobe.value.forEach(item => materials.add(item.clothing.material.material))
+  availableClothing.value.forEach(item => materials.add(item.material.material))
+  return Array.from(materials)
 })
 
 const filteredWardrobe = computed(() => {
@@ -144,7 +153,7 @@ const filteredAvailableClothing = computed(() => {
   )
 })
 
-function itemMatchesFilters(item: ClothingItem, filters: { search: string, style: string | null }): boolean {
+function itemMatchesFilters(item: ClothingItem, filters: { search: string, style: string | null, material: string | null }): boolean {
   const searchLower = filters.search.toLowerCase()
   return (
       (!filters.search ||
@@ -153,7 +162,8 @@ function itemMatchesFilters(item: ClothingItem, filters: { search: string, style
           item.style.style.toLowerCase().includes(searchLower) ||
           item.color.toLowerCase().includes(searchLower)
       ) &&
-      (!filters.style || item.style.style === filters.style)
+      (!filters.style || item.style.style === filters.style) &&
+      (!filters.material || item.material.material === filters.material)
   )
 }
 
@@ -203,14 +213,15 @@ async function removeFromWardrobe(itemId: number) {
   }
 }
 
-function updateFilters(newFilters: { search: string, style: string | null }) {
+function updateFilters(newFilters: { search: string, style: string | null, material: string | null }) {
   filters.value = newFilters
 }
 
 function resetFilters() {
   filters.value = {
     search: '',
-    style: null
+    style: null,
+    material: null
   }
 }
 

@@ -19,7 +19,17 @@
         </SelectItem>
       </SelectContent>
     </Select>
-
+    <Select v-model="selectedMaterial" @update:modelValue="updateFilters">
+      <SelectTrigger class="w-[180px]">
+        <SelectValue placeholder="Select Material" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem :value="null">All Materials</SelectItem>
+        <SelectItem v-for="material in materials" :key="material" :value="material">
+          {{ material }}
+        </SelectItem>
+      </SelectContent>
+    </Select>
     <Button variant="outline" @click="resetFilters">
       <RefreshCcw class="mr-2 h-4 w-4" />
       Reset Filters
@@ -36,13 +46,15 @@ import { RefreshCcw } from 'lucide-vue-next'
 
 const props = defineProps<{
   styles: string[]
+  materials: string[]
 }>()
 
 const emit = defineEmits<{
-  (e: 'update:filters', filters: { style: string | null; search: string }): void
+  (e: 'update:filters', filters: { style: string | null; material: string | null; search: string }): void
 }>()
 
 const selectedStyle = ref<string | null>(null)
+const selectedMaterial = ref<string | null>(null)
 const searchQuery = ref('')
 
 function onSearchInput(event: Event) {
@@ -53,17 +65,23 @@ function onSearchInput(event: Event) {
 function updateFilters() {
   emit('update:filters', {
     style: selectedStyle.value,
+    material: selectedMaterial.value,
     search: searchQuery.value
   })
 }
 
 function resetFilters() {
   selectedStyle.value = null
+  selectedMaterial.value = null
   searchQuery.value = ''
   updateFilters()
 }
 
 watch(() => props.styles, () => {
+  resetFilters()
+})
+
+watch(() => props.materials, () => {
   resetFilters()
 })
 </script>
