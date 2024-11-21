@@ -9,7 +9,6 @@
 
     <div v-else>
       <FilterBar
-          :types="allTypes"
           :styles="allStyles"
           @update:filters="updateFilters"
       />
@@ -122,16 +121,7 @@ const availableSection = ref<HTMLElement | null>(null)
 
 const filters = ref({
   search: '',
-  type: '',
-  style: '',
-  gender: ''
-})
-
-const allTypes = computed(() => {
-  const types = new Set<string>()
-  wardrobe.value.forEach(item => types.add(item.clothing.type.type))
-  availableClothing.value.forEach(item => types.add(item.type.type))
-  return Array.from(types)
+  style: null as string | null
 })
 
 const allStyles = computed(() => {
@@ -154,7 +144,7 @@ const filteredAvailableClothing = computed(() => {
   )
 })
 
-function itemMatchesFilters(item: ClothingItem, filters: { search: string, type: string, style: string, gender: string }): boolean {
+function itemMatchesFilters(item: ClothingItem, filters: { search: string, style: string | null }): boolean {
   const searchLower = filters.search.toLowerCase()
   return (
       (!filters.search ||
@@ -163,9 +153,7 @@ function itemMatchesFilters(item: ClothingItem, filters: { search: string, type:
           item.style.style.toLowerCase().includes(searchLower) ||
           item.color.toLowerCase().includes(searchLower)
       ) &&
-      (!filters.type || item.type.type === filters.type) &&
-      (!filters.style || item.style.style === filters.style) &&
-      (!filters.gender || item.gender === filters.gender)
+      (!filters.style || item.style.style === filters.style)
   )
 }
 
@@ -215,16 +203,14 @@ async function removeFromWardrobe(itemId: number) {
   }
 }
 
-function updateFilters(newFilters: { search: string, type: string, style: string, gender: string }) {
+function updateFilters(newFilters: { search: string, style: string | null }) {
   filters.value = newFilters
 }
 
 function resetFilters() {
   filters.value = {
     search: '',
-    type: '',
-    style: '',
-    gender: ''
+    style: null
   }
 }
 

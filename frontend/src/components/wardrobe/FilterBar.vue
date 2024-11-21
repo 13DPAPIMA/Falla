@@ -1,74 +1,69 @@
 <template>
-  <div class="flex flex-wrap gap-4 mb-6 w-full">
-    <Input v-model="search" placeholder="Search..." class=" md:w-64 flex-grow" />
-
-    <Select v-model="selectedType">
-      <SelectTrigger class="w-[180px]">
-        <SelectValue placeholder="Select Type" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="">All Types</SelectItem>
-        <SelectItem v-for="type in types" :key="type" :value="type">{{ type }}</SelectItem>
-      </SelectContent>
-    </Select>
-
-    <Select v-model="selectedStyle">
+  <div class="flex flex-wrap gap-4 mb-6">
+    <div class="flex-grow">
+      <Input
+          v-model="searchQuery"
+          placeholder="Search by clothing type..."
+          class="w-full"
+          @input="onSearchInput"
+      />
+    </div>
+    <Select v-model="selectedStyle" @update:modelValue="updateFilters">
       <SelectTrigger class="w-[180px]">
         <SelectValue placeholder="Select Style" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="">All Styles</SelectItem>
-        <SelectItem v-for="style in styles" :key="style" :value="style">{{ style }}</SelectItem>
+        <SelectItem :value="null">All Styles</SelectItem>
+        <SelectItem v-for="style in styles" :key="style" :value="style">
+          {{ style }}
+        </SelectItem>
       </SelectContent>
     </Select>
 
-    <Select v-model="selectedGender">
-      <SelectTrigger class="w-[180px]">
-        <SelectValue placeholder="Select Gender" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="">All Genders</SelectItem>
-        <SelectItem value="male">Male</SelectItem>
-        <SelectItem value="female">Female</SelectItem>
-        <SelectItem value="unisex">Unisex</SelectItem>
-      </SelectContent>
-    </Select>
-
-    <Button variant="outline" @click="resetFilters">Reset Filters</Button>
+    <Button variant="outline" @click="resetFilters">
+      <RefreshCcw class="mr-2 h-4 w-4" />
+      Reset Filters
+    </Button>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { RefreshCcw } from 'lucide-vue-next'
 
 const props = defineProps<{
-  types: string[]
   styles: string[]
 }>()
 
-const emit = defineEmits(['update:filters'])
+const emit = defineEmits<{
+  (e: 'update:filters', filters: { style: string | null; search: string }): void
+}>()
 
-const search = ref('')
-const selectedType = ref('')
-const selectedStyle = ref('')
-const selectedGender = ref('')
+const selectedStyle = ref<string | null>(null)
+const searchQuery = ref('')
 
-watch([search, selectedType, selectedStyle, selectedGender], () => {
+function onSearchInput(event: Event) {
+  searchQuery.value = (event.target as HTMLInputElement).value
+  updateFilters()
+}
+
+function updateFilters() {
   emit('update:filters', {
-    search: search.value,
-    type: selectedType.value,
     style: selectedStyle.value,
-    gender: selectedGender.value
+    search: searchQuery.value
   })
-})
+}
 
 function resetFilters() {
-  search.value = ''
-  selectedType.value = ''
-  selectedStyle.value = ''
-  selectedGender.value = ''
+  selectedStyle.value = null
+  searchQuery.value = ''
+  updateFilters()
 }
+
+watch(() => props.styles, () => {
+  resetFilters()
+})
 </script>
