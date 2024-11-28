@@ -6,6 +6,7 @@ import router from '@/router'
 import { useAuthStore } from '@/stores/auth'
 import { Button } from "@/components/ui/button"
 import { MailIcon } from 'lucide-vue-next'
+import Footer from '@/components/Footer.vue'
 
 const { toast } = useToast()
 const authStore = useAuthStore()
@@ -78,5 +79,8 @@ const handleLogout = async () => {
         </div>
       </div>
     </div>
+  </div>
+  <div class="fixed bottom-0 w-full">
+    <Footer />
   </div>
 </template>

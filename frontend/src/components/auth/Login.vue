@@ -10,6 +10,7 @@ import { useAuthStore } from '@/stores/auth';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
+import Footer from '@/components/Footer.vue'
 
 const { toast } = useToast()
 const authStore = useAuthStore()
@@ -92,5 +93,8 @@ const onSubmit = handleSubmit(async (formValues) => {
         </div>
       </div>
     </div>
+  </div>
+  <div class="fixed bottom-0 w-full">
+    <Footer />
   </div>
 </template>

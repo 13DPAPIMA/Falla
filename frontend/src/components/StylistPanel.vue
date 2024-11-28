@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api'
 import HeaderNavBar from "@/components/HeaderNavbar.vue"
+import Footer from '@/components/Footer.vue'
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
@@ -93,7 +94,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-background">
+  <div class="min-h-screen bg-background mt-[60px]">
     <HeaderNavBar />
     <main class="container mx-auto p-4 space-y-6">
       <h1 class="text-3xl font-bold">Answer Questions</h1>
@@ -128,5 +129,6 @@ onMounted(async () => {
         </Card>
       </div>
     </main>
+    <Footer/>
   </div>
 </template>

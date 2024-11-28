@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import Footer from '@/components/Footer.vue'
 
 const { toast } = useToast()
 const authStore = useAuthStore()
@@ -155,5 +156,8 @@ const onSubmit = handleSubmit(async (formValues) => {
         </div>
       </div>
     </div>
+  </div>
+  <div class="fixed bottom-0 w-full">
+    <Footer />
   </div>
 </template>

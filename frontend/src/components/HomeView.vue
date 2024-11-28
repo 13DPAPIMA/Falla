@@ -7,6 +7,7 @@ import ClothingSuggestions from './ClothingSuggestions.vue'
 import { Cloud, CloudRainWind, Wind, Thermometer, Loader, ChevronDown } from 'lucide-vue-next'
 import HeaderNavBar from '@/components/HeaderNavBar.vue'
 import AskExpert from '@/components/AskExpert.vue'
+import Footer from '@/components/Footer.vue'
 
 interface WeatherData {
   city: {
@@ -166,6 +167,7 @@ onMounted(() => {
       </section>
     </main>
   </div>
+  <Footer/>
 </template>
 
 <style scoped>
